@@ -1,0 +1,600 @@
+.appointment-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 3rem;
+}
+
+/* Hero Section */
+.appointment-hero {
+    position: relative;
+    padding: 6rem 0 4rem 0;
+    overflow: hidden;
+}
+
+.appointment-hero-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.appointment-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+}
+
+.appointment-subtitle {
+    color: #C6A667;
+    text-align: center;
+    margin-bottom: 0;
+    font-size: 1.3rem;
+    font-weight: 300;
+    letter-spacing: 1px;
+}
+
+/* Секция поиска */
+.appointment-search-section {
+    position: relative;
+    padding: 4rem 0;
+}
+
+.search-form-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: rgba(20, 20, 25, 0.85);
+    border: 1px solid rgba(198, 166, 103, 0.2);
+    border-radius: 2px;
+    padding: 2.5rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+/* Форма поиска */
+.appointment-search-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    align-items: end;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.form-group select,
+.form-group input[type="date"] {
+    padding: 0.875rem 1rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23C6A667' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1.2rem;
+    padding-right: 3rem;
+}
+
+.form-group select:focus,
+.form-group input[type="date"]:focus {
+    outline: none;
+    border-color: #C6A667;
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(198, 166, 103, 0.1);
+}
+
+.form-group select option {
+    background: #1A1A24;
+    color: #fff;
+}
+
+/* Кнопка поиска */
+.btn-search {
+    width: 100%;
+    height: 50px;
+    background: linear-gradient(135deg, #C6A667 0%, #B89553 100%);
+    border: none;
+    border-radius: 2px;
+    color: #0E0E12;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(198, 166, 103, 0.3);
+    letter-spacing: 0.5px;
+}
+
+.btn-search:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(198, 166, 103, 0.4);
+}
+
+.btn-search:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-search:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Сообщения об ошибках */
+.error-message-appoitment {
+    background: rgba(220, 53, 69, 0.15);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    border-radius: 8px;
+    padding: 1rem;
+    color: #ff6b6b;
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 0.95rem;
+}
+
+.results-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 3rem;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.results-title span {
+    color: #C6A667;
+}
+
+/* Сетка карточек врачей */
+.doctors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 2.5rem;
+}
+
+/* Карточка врача */
+.doctor-card {
+    background: rgba(14, 14, 18, 0.9);
+    border: 1px solid rgba(198, 166, 103, 0.15);
+    border-radius: 4px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+.doctor-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(198, 166, 103, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Заголовок карточки врача */
+
+/* Информация о клинике */
+.clinic-info-appointment {
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    background: rgba(14, 14, 18, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.1);
+    border-radius: 4px;
+}
+
+.clinic-info-appointment p {
+    color: var(--color-text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+.clinic-info-appointment p:last-child {
+    margin-bottom: 0;
+}
+
+.clinic-info-appointment strong {
+    color: var(--color-accent-gold);
+    font-weight: 600;
+}
+
+.clinic-name {
+    font-size: 1.05rem !important;
+}
+
+.clinic-address,
+.clinic-phone {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+/* Доступные слоты */
+.available-slots {
+    margin-top: 1.5rem;
+}
+
+.slots-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--color-text-primary);
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.slots-by-date {
+    margin-bottom: 1.5rem;
+}
+
+.date-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-accent-gold);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(198, 166, 103, 0.2);
+}
+
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 0.875rem;
+}
+
+.slot-button {
+    padding: 0.5rem 0.5rem;
+    background: transparent;
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    border-radius: 2px;
+    color: var(--color-text-secondary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.slot-button:hover {
+    background: rgba(198, 166, 103, 0.1);
+    border-color: var(--color-accent-gold);
+    color: var(--color-accent-gold);
+    transform: translateY(-2px);
+}
+
+.slot-button:active {
+    transform: translateY(0);
+}
+
+/* Модальное окно */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 0.5rem;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: var(--color-primary-dark);
+    border: 1px solid rgba(198, 166, 103, 0.2);
+    border-radius: 4px;
+    max-width: 650px;
+    width: 100%;
+    max-height: 97vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Заголовок модального окна */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    border-bottom: 1px solid rgba(198, 166, 103, 0.15);
+}
+
+.modal-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    color: var(--color-accent-gold);
+    transform: rotate(90deg);
+}
+
+.modal-body {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Сводка бронирования */
+.booking-summary {
+    background: rgba(14, 14, 18, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.15);
+    border-radius: 4px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.booking-summary p {
+    color: var(--color-text-secondary);
+    margin-bottom: 0.875rem;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.booking-summary p:last-child {
+    margin-bottom: 0;
+}
+
+.booking-summary strong {
+    color: var(--color-accent-gold);
+    font-weight: 600;
+}
+
+/* Форма бронирования */
+.booking-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.booking-form .form-group label {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.6rem;
+}
+
+.booking-form input[type="text"],
+.booking-form input[type="tel"],
+.booking-form textarea {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(18, 18, 23, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.2);
+    border-radius: 2px;
+    color: var(--color-text-secondary);
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.booking-form input[type="text"]::placeholder,
+.booking-form input[type="tel"]::placeholder,
+.booking-form textarea::placeholder {
+    color: var(--color-text-darker);
+}
+
+.booking-form input[type="text"]:focus,
+.booking-form input[type="tel"]:focus,
+.booking-form textarea:focus {
+    outline: none;
+    border-color: var(--color-accent-gold);
+    background: rgba(18, 18, 23, 0.9);
+    box-shadow: 0 0 0 3px rgba(198, 166, 103, 0.1);
+}
+
+.booking-form textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* Действия модального окна */
+.modal-actions {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 2rem;
+}
+
+.btn-cancel-booking,
+.btn-confirm-booking {
+    flex: 1;
+    padding: 1.1rem 2rem;
+    border-radius: 2px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel-booking {
+    background: transparent;
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    color: var(--color-text-secondary);
+}
+
+.btn-cancel-booking:hover:not(:disabled) {
+    border-color: var(--color-accent-gold);
+    color: var(--color-accent-gold);
+    transform: translateY(-2px);
+}
+
+.btn-confirm-booking {
+    background: linear-gradient(135deg, #C6A667 0%, #D2B48C 100%);
+    border: none;
+    color: #0E0E12;
+    box-shadow: 0 4px 16px rgba(198, 166, 103, 0.3);
+}
+
+.btn-confirm-booking:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(198, 166, 103, 0.3);
+}
+
+.btn-confirm-booking:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-confirm-booking:disabled,
+.btn-cancel-booking:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .appointment-container {
+        padding: 0 2rem;
+    }
+
+    .doctors-grid {
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .appointment-container {
+        padding: 0 1.5rem;
+    }
+
+    .appointment-hero {
+        padding: 4rem 0 3rem 0;
+    }
+
+    .appointment-title {
+        font-size: 2.5rem;
+    }
+
+    .appointment-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .search-form-container {
+        padding: 2rem 1.5rem;
+    }
+
+    .appointment-search-form {
+        grid-template-columns: 1fr;
+    }
+
+    .appointment-results-section {
+        padding: 3rem 0 4rem 0;
+    }
+
+    .results-title {
+        font-size: 2rem;
+    }
+
+    .doctors-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .doctor-card {
+        padding: 1.5rem;
+    }
+
+    .slots-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    }
+
+    .modal-header,
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .btn-cancel,
+    .btn-confirm {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .appointment-title {
+        font-size: 2rem;
+    }
+
+    .appointment-subtitle {
+        font-size: 1rem;
+    }
+
+    .slots-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 0.625rem;
+    }
+
+    .slot-button {
+        font-size: 0.75rem;
+    }
+}

@@ -1,0 +1,415 @@
+.all-users-page {
+    min-height: 100vh;
+    padding: 8rem 0 4rem;
+}
+
+.all-users-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.all-users-header {
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.all-users-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.all-users-subtitle {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Поиск */
+.search-container {
+    position: relative;
+    max-width: 500px;
+    margin: 0 auto 2rem;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.9rem 3rem 0.9rem 1.2rem;
+    background: rgba(26, 26, 32, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    border-radius: 4px;
+    color: #FFFFFF;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #C6A667;
+    box-shadow: 0 0 0 3px rgba(198, 166, 103, 0.1);
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.clear-search-btn:hover {
+    color: #C6A667;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.users-table-container {
+    background: rgba(26, 26, 32, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table thead {
+    background: rgba(198, 166, 103, 0.1);
+}
+
+.users-table th {
+    padding: 1rem;
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #C6A667;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(198, 166, 103, 0.3);
+}
+
+/* Сортируемые заголовки */
+.sortable-header {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.sortable-header:hover {
+    color: #D2B48C;
+    background: rgba(198, 166, 103, 0.08);
+}
+
+.sortable-header:active {
+    transform: scale(0.98);
+}
+
+.users-table td {
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+}
+
+.users-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.users-table tbody tr:hover {
+    background: rgba(198, 166, 103, 0.05);
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.role-patient {
+    background: rgba(33, 150, 243, 0.2);
+    color: #64B5F6;
+}
+
+.role-doctor {
+    background: rgba(76, 175, 80, 0.2);
+    color: #81C784;
+}
+
+.role-clinic_admin {
+    background: rgba(255, 152, 0, 0.2);
+    color: #FFB74D;
+}
+
+.role-super_admin {
+    background: rgba(156, 39, 176, 0.2);
+    color: #BA68C8;
+}
+
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-edit-small,
+.btn-delete-small,
+.btn-save-small,
+.btn-cancel-small {
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-edit-small {
+    background: rgba(33, 150, 243, 0.2);
+    color: #64B5F6;
+}
+
+.btn-edit-small:hover {
+    background: rgba(33, 150, 243, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-delete-small {
+    background: rgba(244, 67, 54, 0.2);
+    color: #EF5350;
+}
+
+.btn-delete-small:hover:not(:disabled) {
+    background: rgba(244, 67, 54, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-delete-small:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.btn-save-small {
+    background: rgba(76, 175, 80, 0.2);
+    color: #81C784;
+}
+
+.btn-save-small:hover {
+    background: rgba(76, 175, 80, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn-cancel-small {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-cancel-small:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.edit-input,
+.edit-select {
+    width: 100%;
+    padding: 0.5rem;
+    background: rgba(14, 14, 18, 0.8);
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    border-radius: 6px;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    transition: border-color 0.3s ease;
+}
+
+.edit-input:focus,
+.edit-select:focus {
+    outline: none;
+    border-color: #C6A667;
+}
+
+.edit-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Модальное окно удаления */
+.delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.delete-modal {
+    background: rgba(14, 14, 18, 0.95);
+    border: 1px solid rgba(198, 166, 103, 0.2);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.3s ease-out;
+}
+
+.delete-modal h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #C6A667;
+    margin: 0 0 1rem 0;
+}
+
+.delete-modal p {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0.5rem 0;
+}
+
+.warning-text {
+    color: #EF5350 !important;
+    font-weight: 600;
+    margin-top: 1rem !important;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+.btn-cancel-delete,
+.btn-confirm-delete {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel-delete {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-cancel-delete:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.btn-confirm-delete {
+    background: linear-gradient(135deg, #F44336 0%, #E91E63 100%);
+    color: #fff;
+}
+
+.btn-confirm-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 1024px) {
+    .users-table {
+        font-size: 0.85rem;
+    }
+
+    .users-table th,
+    .users-table td {
+        padding: 0.75rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .all-users-page {
+        padding: 7rem 0 3rem;
+    }
+
+    .all-users-title {
+        font-size: 2rem;
+    }
+
+    .users-table-container {
+        overflow-x: auto;
+    }
+
+    .users-table {
+        min-width: 900px;
+    }
+}
+
+@media (max-width: 480px) {
+    .all-users-container {
+        padding: 0 1rem;
+    }
+
+    .all-users-title {
+        font-size: 1.75rem;
+    }
+
+    .delete-modal {
+        padding: 1.5rem;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .btn-cancel-delete,
+    .btn-confirm-delete {
+        width: 100%;
+    }
+}

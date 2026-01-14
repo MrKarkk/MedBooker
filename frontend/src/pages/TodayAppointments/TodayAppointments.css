@@ -1,0 +1,226 @@
+/* TodayAppointments - Премиум очередь для большого экрана */
+
+.queue-container {
+    min-height: 100vh;
+    background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+}
+
+/* Навбар */
+.queue-navbar {
+    background: white;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.queue-navbar-content {
+    width: 100%;
+    padding: 1rem 2rem;
+}
+
+.queue-navbar-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.queue-logo-section {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.queue-logo {
+    font-size: 1.875rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #C6A667, #D2B48C);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-decoration: none;
+}
+
+.queue-time {
+    font-size: 1.875rem;
+    font-weight: 600;
+    color: #C6A667;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Основная зона */
+.queue-main {
+    width: 100%;
+    padding: 2rem;
+}
+
+/* Пустое состояние */
+.queue-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(100vh - 120px);
+}
+
+.queue-empty-content {
+    text-align: center;
+}
+
+.queue-empty-title {
+    font-size: 2.25rem;
+    font-weight: 500;
+    color: #9ca3af;
+    margin-bottom: 0.5rem;
+}
+
+.queue-empty-subtitle {
+    font-size: 1.25rem;
+    color: #d1d5db;
+}
+
+/* Grid карточек */
+.queue-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+    .queue-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1024px) {
+    .queue-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1280px) {
+    .queue-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1536px) {
+    .queue-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+}
+
+/* Карточка */
+.queue-card {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.queue-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Цветная полоса статуса */
+.queue-status-bar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 1rem;
+}
+
+.status-pending {
+    background-color: #fbbf24;
+}
+
+.status-invited {
+    background-color: #10b981;
+}
+
+.status-urgent {
+    background-color: #ef4444;
+}
+
+/* Контент карточки */
+.queue-card-content {
+    padding: 0.5rem 1rem;
+    padding-right: 2rem;
+}
+
+.queue-patient-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.queue-coupon-number-doctor-cabinet {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.queue-doctor-cabinet {
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.queue-coupon-number {
+    font-size: 2.25rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #C6A667, #D2B48C);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Анимация появления */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.queue-card {
+    animation: fadeInUp 0.4s ease-out;
+}
+
+/* Загрузка */
+.queue-loading {
+    min-height: 100vh;
+    background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.queue-loading-text {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #4b5563;
+}
+
+/* Увеличенные шрифты для больших экранов */
+@media (min-width: 1920px) {
+    .queue-patient-name {
+        font-size: 1.75rem;
+    }
+    
+    .queue-time {
+        font-size: 2.25rem;
+    }
+    
+    .queue-coupon-number {
+        font-size: 3rem;
+    }
+}

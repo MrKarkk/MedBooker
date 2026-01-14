@@ -1,0 +1,359 @@
+.admin-clinics-page {
+    min-height: 100vh;
+    padding: 8rem 0 4rem;
+}
+
+.admin-clinics-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.admin-clinics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.admin-clinics-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.admin-clinics-subtitle {
+    font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.btn-create {
+    padding: 0.9rem 2rem;
+    color: #0E0E12;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(198, 166, 103, 0.3);
+}
+
+.btn-create:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(198, 166, 103, 0.4);
+}
+
+/* Поиск */
+.search-container {
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.9rem 3rem 0.9rem 1.2rem;
+    background: rgba(26, 26, 32, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    border-radius: 8px;
+    color: #FFFFFF;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #C6A667;
+    box-shadow: 0 0 0 3px rgba(198, 166, 103, 0.1);
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.clear-search-btn {
+    position: absolute;
+    right: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    transition: color 0.3s ease;
+}
+
+.clear-search-btn:hover {
+    color: #C6A667;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Таблица */
+.clinics-table-container {
+    background: rgba(26, 26, 32, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.2);
+    border-radius: 12px;
+    overflow-x: auto;
+    backdrop-filter: blur(10px);
+}
+
+.clinics-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1200px;
+}
+
+.clinics-table thead {
+    background: rgba(198, 166, 103, 0.1);
+}
+
+.clinics-table th {
+    padding: 1rem;
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #C6A667;
+    text-transform: uppercase;
+    border-bottom: 2px solid rgba(198, 166, 103, 0.3);
+}
+
+.sortable-header {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.sortable-header:hover {
+    color: #D2B48C;
+    background: rgba(198, 166, 103, 0.08);
+}
+
+.sortable-header:active {
+    transform: scale(0.98);
+}
+
+.clinics-table td {
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+}
+
+.clinics-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.clinics-table tbody tr:hover {
+    background: rgba(198, 166, 103, 0.05);
+}
+
+/* Редактирование */
+.edit-input,
+.edit-select {
+    width: 100%;
+    padding: 0.5rem;
+    background: rgba(14, 14, 18, 0.8);
+    border: 1px solid rgba(198, 166, 103, 0.4);
+    border-radius: 4px;
+    color: #FFFFFF;
+    font-size: 0.9rem;
+}
+
+.edit-input:focus,
+.edit-select:focus {
+    outline: none;
+    border-color: #C6A667;
+}
+
+/* Кнопки действий */
+.actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-edit-small,
+.btn-delete-small,
+.btn-save-small,
+.btn-cancel-small {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.btn-edit-small {
+    background: rgba(72, 219, 251, 0.2);
+    color: #48dbfb;
+}
+
+.btn-edit-small:hover {
+    background: rgba(72, 219, 251, 0.3);
+    transform: scale(1.05);
+}
+
+.btn-delete-small {
+    background: rgba(255, 71, 87, 0.2);
+    color: #ff4757;
+}
+
+.btn-delete-small:hover {
+    background: rgba(255, 71, 87, 0.3);
+    transform: scale(1.05);
+}
+
+.btn-save-small {
+    background: rgba(46, 213, 115, 0.2);
+    color: #2ed573;
+}
+
+.btn-save-small:hover {
+    background: rgba(46, 213, 115, 0.3);
+    transform: scale(1.05);
+}
+
+.btn-cancel-small {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-cancel-small:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+}
+
+/* Модальное окно удаления */
+.delete-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+.delete-modal {
+    background: linear-gradient(135deg, #1A1A20 0%, #0E0E12 100%);
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    animation: slideUp 0.3s ease;
+}
+
+.delete-modal h3 {
+    color: #C6A667;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.delete-modal p {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 0.5rem;
+}
+
+.warning-text {
+    color: #ff4757;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn-cancel-delete,
+.btn-confirm-delete {
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-cancel-delete {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-cancel-delete:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-confirm-delete {
+    background: linear-gradient(135deg, #ff4757 0%, #ff6348 100%);
+    color: #FFFFFF;
+}
+
+.btn-confirm-delete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .admin-clinics-container {
+        padding: 0 1rem;
+    }
+    
+    .clinics-table {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-clinics-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .admin-clinics-title {
+        font-size: 2rem;
+    }
+    
+    .btn-create {
+        width: 100%;
+    }
+}

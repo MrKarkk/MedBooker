@@ -1,0 +1,25 @@
+.custom-select-input {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--color-text-primary);
+    font-size: 1.05rem;
+}
+
+.custom-select-input::placeholder {
+    color: var(--color-text-muted);
+    background: transparent;
+}
+
+.custom-select-input:-webkit-autofill,
+.custom-select-input:-webkit-autofill:focus,
+.custom-select-input:-webkit-autofill:hover,
+.custom-select-input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px rgba(198, 166, 103, 0.00) inset;
+    box-shadow: 0 0 0 1000px rgba(198, 166, 103, 0.00) inset;
+    -webkit-text-fill-color: var(--color-text-primary);
+    transition: background-color 5000s ease-in-out 0s;
+    border-color: var(--color-accent-gold);
+}

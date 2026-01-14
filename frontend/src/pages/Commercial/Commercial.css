@@ -1,0 +1,586 @@
+.commercial-page {
+  min-height: 100vh;
+  padding-top: 100px;
+}
+
+/* Hero Section */
+.hero-section {
+  padding: 4rem 2rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(198, 166, 103, 0.2);
+  animation: fadeIn 0.8s ease-out;
+}
+
+.hero-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.hero-title-commercial {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 1.5rem;
+  line-height: 1.3;
+  animation: slideInDown 0.8s ease-out;
+}
+
+.hero-title-commercial .brand-name {
+    color: #C6A667;
+}
+
+.hero-subtitle {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.8;
+  margin-bottom: 2rem;
+  animation: slideInUp 0.8s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Section Styles */
+.section {
+  padding: 4rem 2rem;
+  animation: fadeIn 0.8s ease-out;
+}
+
+.section-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Feature Cards Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.feature-card {
+  border: 1px solid rgba(198, 166, 103, 0.2);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  border-color: #C6A667;
+  box-shadow: 0 10px 30px rgba(198, 166, 103, 0.2);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: bounce 2s infinite;
+}
+
+.feature-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.feature-description {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Notifications Grid */
+.notifications-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.notification-card {
+  border: 1px solid rgba(198, 166, 103, 0.2);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.notification-card:hover {
+  transform: translateY(-5px);
+  border-color: #C6A667;
+  box-shadow: 0 10px 30px rgba(198, 166, 103, 0.2);
+}
+
+.notification-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  animation: pulse 2s infinite;
+}
+
+.notification-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.notification-description {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Benefits Grid */
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.benefit-card-commercial {
+  border: 1px solid rgba(198, 166, 103, 0.2);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease-out;
+  animation-fill-mode: both;
+}
+
+.benefit-card-commercial:hover {
+  transform: translateY(-5px);
+  border-color: #C6A667;
+  box-shadow: 0 10px 30px rgba(198, 166, 103, 0.2);
+}
+
+.benefit-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  animation: swing 2s infinite;
+}
+
+.benefit-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.benefit-description {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Expand Button */
+.expand-btn {
+  border: 1px solid rgba(198, 166, 103, 0.3);
+  color: #C6A667;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.expand-btn:hover {
+  background: rgba(198, 166, 103, 0.2);
+  border-color: #C6A667;
+  transform: scale(1.05);
+}
+
+/* Expanded Content */
+.expanded-content {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-left: 3px solid #C6A667;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.6;
+  animation: slideInDown 0.3s ease-out;
+}
+
+/* Pricing Section */
+
+.pricing-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.pricing-card {
+  border: 2px solid rgba(198, 166, 103, 0.3);
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.pricing-card:hover {
+  transform: translateY(-10px);
+  border-color: #C6A667;
+  box-shadow: 0 15px 40px rgba(198, 166, 103, 0.3);
+}
+
+.trial-card {
+  border-color: rgba(76, 175, 80, 0.5);
+}
+
+.trial-card:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 15px 40px rgba(76, 175, 80, 0.3);
+}
+
+.pricing-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  animation: bounce 2s infinite;
+}
+
+.pricing-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.pricing-description {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* CTA Section */
+.cta-section-commercial-commercial-commercial-commercial {
+  text-align: center;
+  padding: 5rem 2rem;
+}
+
+.cta-text {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 3rem;
+  animation: slideInUp 0.6s ease-out;
+}
+
+/* Download Section */
+.download-section {
+  margin: 3rem 0 4rem;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.download-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  color: #C6A667;
+  margin-bottom: 2rem;
+}
+
+.download-buttons {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 2.5rem;
+    background: rgba(18, 18, 23, 0.9);
+  border: 2px solid rgba(198, 166, 103, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 280px;
+}
+
+.download-btn:hover {
+  transform: translateY(-5px);
+  border-color: #C6A667;
+  box-shadow: 0 10px 30px rgba(198, 166, 103, 0.3);
+}
+
+.download-btn-life {
+  border-color: rgba(76, 175, 80, 0.5);
+}
+
+.download-btn-life:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+}
+
+.btn-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+  animation: bounce 2s infinite;
+}
+
+.btn-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+}
+
+.btn-main {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.btn-sub {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Contact Info */
+.contact-info {
+  max-width: 600px;
+  margin: 0 auto;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.contact-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  color: #C6A667;
+  margin-bottom: 2rem;
+}
+
+.contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.contact-link-commercial {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem 1.5rem;
+  border: 1px solid rgba(198, 166, 103, 0.2);
+  border-radius: 10px;
+  color: #FFFFFF;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  animation: fadeInRight 0.6s ease-out;
+}
+
+.contact-link-commercial:hover {
+  border-color: #C6A667;
+  transform: translateX(5px);
+}
+
+.contact-icon {
+  font-size: 1.5rem;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes swing {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(5deg);
+  }
+  75% {
+    transform: rotate(-5deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 1.8rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .section {
+    padding: 3rem 1rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .features-grid,
+  .notifications-grid,
+  .benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .pricing-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-card,
+  .notification-card,
+  .benefit-card-commercial,
+  .pricing-card {
+    padding: 1.5rem;
+  }
+
+  .feature-icon,
+  .benefit-icon,
+  .pricing-icon {
+    font-size: 2.5rem;
+  }
+
+  .notification-icon {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .contact-links {
+    gap: 1rem;
+  }
+
+  .contact-link-commercial {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .download-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .download-btn {
+    width: 100%;
+    max-width: 350px;
+  }
+
+  .download-title {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .commercial-page {
+    padding-top: 80px;
+  }
+
+  .hero-section {
+    padding: 3rem 1rem;
+  }
+
+  .hero-title {
+    font-size: 1.5rem;
+  }
+
+  .section-title {
+    font-size: 1.3rem;
+  }
+
+  .contact-link-commercial {
+    flex-direction: column;
+    text-align: center;
+  }
+}

@@ -1,0 +1,376 @@
+.admin-doctors-page {
+    min-height: 100vh;
+    padding: 8rem 0 4rem;
+}
+
+.admin-doctors-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.admin-doctors-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.admin-doctors-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    font-weight: 700;
+    background-clip: text;
+}
+
+.btn-create {
+    padding: 0.8rem 1.8rem;
+    color: #0E0E12;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(198, 166, 103, 0.3);
+}
+
+.btn-create:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(198, 166, 103, 0.4);
+}
+
+/* Контролы */
+.admin-doctors-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.search-input {
+    flex: 1;
+    padding: 0.8rem 1.2rem;
+    background: rgba(26, 26, 32, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    border-radius: 8px;
+    color: #FFFFFF;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #C6A667;
+    box-shadow: 0 0 0 3px rgba(198, 166, 103, 0.1);
+}
+
+.results-info {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+/* Таблица */
+.table-wrapper {
+    background: rgba(26, 26, 32, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.2);
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.admin-doctors-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-doctors-table thead {
+    background: rgba(198, 166, 103, 0.1);
+}
+
+.admin-doctors-table th {
+    padding: 1rem;
+    text-align: left;
+    color: #C6A667;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-bottom: 2px solid rgba(198, 166, 103, 0.3);
+    white-space: nowrap;
+}
+
+.admin-doctors-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s ease;
+}
+
+.admin-doctors-table th.sortable:hover {
+    background: rgba(198, 166, 103, 0.15);
+    color: #D2B48C;
+}
+
+.admin-doctors-table td {
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid rgba(198, 166, 103, 0.1);
+    font-size: 0.95rem;
+}
+
+.admin-doctors-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.admin-doctors-table tbody tr:hover {
+    background: rgba(198, 166, 103, 0.05);
+}
+
+/* Поля редактирования */
+.edit-input,
+.edit-select {
+    width: 100%;
+    padding: 0.4rem 0.6rem;
+    background: rgba(14, 14, 18, 0.8);
+    border: 1px solid #C6A667;
+    border-radius: 4px;
+    color: #FFFFFF;
+    font-size: 0.9rem;
+}
+
+.edit-input:focus,
+.edit-select:focus {
+    outline: none;
+    border-color: #D2B48C;
+    box-shadow: 0 0 0 2px rgba(198, 166, 103, 0.2);
+}
+
+/* Бейджи */
+.badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-info {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60A5FA;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Кнопки действий */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-edit,
+.btn-delete,
+.btn-save,
+.btn-cancel-edit {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-edit {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60A5FA;
+}
+
+.btn-edit:hover {
+    background: rgba(59, 130, 246, 0.3);
+    transform: scale(1.1);
+}
+
+.btn-delete {
+    background: rgba(239, 68, 68, 0.2);
+    color: #F87171;
+}
+
+.btn-delete:hover {
+    background: rgba(239, 68, 68, 0.3);
+    transform: scale(1.1);
+}
+
+.btn-save {
+    background: rgba(34, 197, 94, 0.2);
+    color: #4ADE80;
+}
+
+.btn-save:hover {
+    background: rgba(34, 197, 94, 0.3);
+}
+
+.btn-cancel-edit {
+    background: rgba(156, 163, 175, 0.2);
+    color: #9CA3AF;
+}
+
+.btn-cancel-edit:hover {
+    background: rgba(156, 163, 175, 0.3);
+}
+
+/* Модальное окно */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+/* .modal-content {
+    background: #1A1A20;
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 90%;
+    animation: slideUp 0.3s ease;
+} */
+
+.modal-content h3 {
+    color: #C6A667;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.modal-content p {
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.warning-text {
+    color: #F87171 !important;
+    font-weight: 600;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.btn-modal-cancel,
+.btn-modal-confirm {
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.btn-modal-cancel:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.btn-modal-confirm {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    color: #FFFFFF;
+}
+
+.btn-modal-confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+/* Сообщения */
+.no-results {
+    padding: 3rem;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.1rem;
+}
+
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+    color: #C6A667;
+    font-size: 1.2rem;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 1400px) {
+    .admin-doctors-table {
+        font-size: 0.9rem;
+    }
+
+    .admin-doctors-table th,
+    .admin-doctors-table td {
+        padding: 0.8rem;
+    }
+}
+
+@media (max-width: 1200px) {
+    .table-wrapper {
+        overflow-x: auto;
+    }
+
+    .admin-doctors-table {
+        min-width: 1200px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-doctors-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .admin-doctors-title {
+        font-size: 2rem;
+    }
+
+    .admin-doctors-controls {
+        flex-direction: column;
+    }
+
+    .results-info {
+        width: 100%;
+        text-align: center;
+    }
+}

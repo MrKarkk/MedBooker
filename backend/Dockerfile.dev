@@ -1,0 +1,42 @@
+FROM python:3.11-alpine
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    DJANGO_SETTINGS_MODULE=backend.settings \
+    PATH="/opt/venv/bin:$PATH"
+
+# Системные зависимости
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    postgresql-dev \
+    postgresql-libs \
+    libpq \
+    libjpeg \
+    zlib-dev \
+    linux-headers \
+    libffi-dev \
+    bash
+
+# Виртуальное окружение
+RUN python -m venv /opt/venv
+
+WORKDIR /app
+
+# Зависимости (ставим один раз)
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+# ❗ Код НЕ копируем — он будет примонтирован
+EXPOSE 8000
+
+CMD ["gunicorn", \
+    "backend.wsgi:application", \
+    "--bind", "0.0.0.0:8000", \
+    "--workers", "2", \
+    "--threads", "2", \
+    "--reload", \
+    "--timeout", "120", \
+    "--access-logfile", "-", \
+    "--error-logfile", "-", \
+    "--log-level", "debug"]

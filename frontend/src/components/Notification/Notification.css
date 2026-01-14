@@ -1,0 +1,215 @@
+.notification {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 10000;
+  min-width: 320px;
+  max-width: 450px;
+  padding: 1.2rem 1.5rem;
+  background: var(--color-secondary-dark, #121217);
+  border: 1px solid rgba(198, 166, 103, 0.25);
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(198, 166, 103, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  animation: notification-slide-in 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font-primary, 'Inter', sans-serif);
+  backdrop-filter: blur(10px);
+}
+
+@keyframes notification-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.notification.notification-exit {
+  animation: notification-slide-out 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes notification-slide-out {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%) scale(0.9);
+  }
+}
+
+/* Icon */
+.notification-icon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  transition: all 0.3s;
+}
+
+/* Success */
+.notification-success .notification-icon {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(76, 175, 80, 0.1) 100%);
+  color: #4CAF50;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.2);
+}
+
+.notification-success {
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+/* Error */
+.notification-error .notification-icon {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.2) 0%, rgba(244, 67, 54, 0.1) 100%);
+  color: #F44336;
+  border: 2px solid rgba(244, 67, 54, 0.3);
+  box-shadow: 0 0 20px rgba(244, 67, 54, 0.2);
+}
+
+.notification-error {
+  border-color: rgba(244, 67, 54, 0.3);
+}
+
+/* Loading */
+.notification-loading .notification-icon {
+  background: linear-gradient(135deg, rgba(198, 166, 103, 0.2) 0%, rgba(210, 180, 140, 0.1) 100%);
+  border: 2px solid rgba(198, 166, 103, 0.3);
+  box-shadow: 0 0 20px rgba(198, 166, 103, 0.2);
+}
+
+.notification-loading {
+  border-color: rgba(198, 166, 103, 0.3);
+}
+
+/* Spinner Animation */
+.notification-spinner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner-ring {
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 2.5px solid rgba(198, 166, 103, 0.2);
+  border-top-color: var(--color-accent-gold, #C6A667);
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes spinner-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Content */
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-message {
+  margin: 0;
+  color: var(--color-text-primary, #E5E5E5);
+  font-size: 1rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* Close Button */
+.notification-close {
+  flex-shrink: 0;
+  width: 1.8rem;
+  height: 1.8rem;
+  background: transparent;
+  border: 1px solid rgba(198, 166, 103, 0.2);
+  border-radius: 2px;
+  color: var(--color-text-muted, #B0B0B0);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.notification-close:hover {
+  background: rgba(198, 166, 103, 0.1);
+  border-color: var(--color-accent-gold, #C6A667);
+  color: var(--color-accent-gold, #C6A667);
+  transform: scale(1.1);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .notification {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    min-width: auto;
+    max-width: none;
+    padding: 1rem;
+  }
+  
+  .notification-icon {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.1rem;
+  }
+  
+  .notification-message {
+    font-size: 0.95rem;
+  }
+  
+  .spinner-ring {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}
+
+/* Multiple Notifications Container */
+.notifications-container {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  pointer-events: none;
+}
+
+.notifications-container .notification {
+  position: relative;
+  top: auto;
+  right: auto;
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .notifications-container {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+  }
+}

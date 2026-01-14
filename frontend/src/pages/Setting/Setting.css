@@ -1,0 +1,361 @@
+/* Settings Page - Premium Clinic Design */
+
+.settings-page {
+    min-height: calc(100vh - 160px);
+    padding: var(--spacing-2xl) 0;
+    background: var(--color-primary-dark);
+}
+
+.settings-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-xl);
+}
+
+/* Header */
+.settings-header {
+    margin-bottom: var(--spacing-2xl);
+    text-align: center;
+    padding-bottom: var(--spacing-xl);
+    border-bottom: 1px solid rgba(198, 166, 103, 0.15);
+}
+
+.settings-title {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.settings-subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+}
+
+/* Sections */
+.settings-section {
+    background: rgba(18, 18, 23, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.15);
+    border-radius: 4px;
+    padding: 1rem;
+    margin-bottom: var(--spacing-xl);
+    transition: border-color var(--transition-base);
+}
+
+.settings-section:hover {
+    border-color: rgba(198, 166, 103, 0.3);
+}
+
+.section-title {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(198, 166, 103, 0.1);
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.info-label {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 1.1rem;
+    color: var(--color-text-secondary);
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    background: rgba(198, 166, 103, 0.15);
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    border-radius: 2px;
+    color: var(--color-accent-gold);
+    font-size: 0.95rem;
+    font-weight: 600;
+    width: fit-content;
+}
+
+/* Section Actions */
+.section-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+/* Clinics Grid */
+.clinics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+/* .clinic-card {
+    background: rgba(14, 14, 18, 0.9);
+    border: 1px solid rgba(198, 166, 103, 0.15);
+    border-radius: 4px;
+    padding: var(--spacing-lg);
+    transition: all var(--transition-base);
+}
+
+.clinic-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(198, 166, 103, 0.4);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+} */
+
+.clinic-header {
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid rgba(198, 166, 103, 0.1);
+}
+
+.clinic-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+
+.clinic-name {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.clinic-rating {
+    font-size: 0.95rem;
+    color: var(--color-accent-gold);
+    font-weight: 600;
+    background: rgba(198, 166, 103, 0.1);
+    padding: 0.3rem 0.6rem;
+    border-radius: 2px;
+}
+
+.clinic-city {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    display: block;
+}
+
+/* Clinic Info */
+.clinic-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+.clinic-info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    font-size: 0.95rem;
+}
+
+.info-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.info-text {
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.info-text strong {
+    color: var(--color-accent-gold);
+    font-weight: 600;
+}
+
+.clinic-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.btn-manage {
+    width: 100%;
+    background: transparent;
+    border: 1px solid rgba(198, 166, 103, 0.3);
+    color: var(--color-text-secondary);
+    padding: 0.7rem 1.5rem;
+    border-radius: 2px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.btn-manage:hover {
+    border-color: var(--color-accent-gold);
+    color: var(--color-accent-gold);
+    transform: translateY(-2px);
+}
+
+/* Settings List */
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.settings-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    background: rgba(14, 14, 18, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.1);
+    border-radius: 4px;
+    transition: all var(--transition-base);
+}
+
+.settings-item:hover {
+    border-color: rgba(198, 166, 103, 0.3);
+    background: rgba(14, 14, 18, 0.8);
+}
+
+.settings-item-content h3 {
+    font-family: var(--font-primary);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-xs);
+}
+
+.settings-item-content p {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+.btn-link {
+    background: transparent;
+    border: none;
+    color: var(--color-accent-gold);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: color var(--transition-base);
+}
+
+.btn-link:hover {
+    color: var(--color-accent-bronze);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--color-text-muted);
+}
+
+.empty-state p {
+    font-size: 1.1rem;
+}
+
+/* Auth Required */
+.auth-required {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    background: rgba(18, 18, 23, 0.6);
+    border: 1px solid rgba(198, 166, 103, 0.15);
+    border-radius: 4px;
+}
+
+.auth-required h2 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.auth-required p {
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .settings-page {
+        padding: var(--spacing-xl) 0;
+    }
+
+    .settings-container {
+        padding: 0 var(--spacing-md);
+    }
+
+    .settings-title {
+        font-size: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-md);
+    }
+
+    .clinics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-md);
+    }
+
+    .section-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-title {
+        font-size: 1.8rem;
+    }
+
+    .settings-subtitle {
+        font-size: 1rem;
+    }
+
+    .clinic-card {
+        padding: var(--spacing-md);
+        width: 100%;
+    }
+    
+    .clinic-actions {
+        display: flex;
+        flex-direction: column;
+    }
+}

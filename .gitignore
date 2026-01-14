@@ -1,0 +1,9 @@
+.vscode/
+.venv/
+__pycache__/
+
+z_bac.todo
+z_front.todo
+test.py
+
+.env
