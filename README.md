@@ -38,14 +38,14 @@ MedBooker решает проблему организации потока па
 ## Технологический стек
 
 **Backend:**
-- Django 5.0 + Django REST Framework
+- Django 5.0.1 + Django REST Framework
 - PostgreSQL 16
 - JWT аутентификация
 - Gunicorn
 
 **Frontend:**
-- React 19
-- Vite
+- React 19.2
+- Vite 7.2
 - Tailwind CSS
 - Axios
 
@@ -139,7 +139,7 @@ docker-compose -f docker-compose.dev.yml up
 
 Если у клиники есть своя информационная система, можно интегрировать MedBooker через REST API:
 
-- Документация API доступна по адресу: http://localhost:8000/api/docs/
+- API доступен по адресу: http://localhost:8000/api/
 - Используйте JWT токены для аутентификации
 - API позволяет создавать, читать, обновлять и удалять записи программно
 
