@@ -57,7 +57,7 @@ export const useElectronicQueue = (clinicId, onVoiceAnnouncement) => {
             return;
         }
 
-        const url = `${axios.defaults.baseURL}/appointment/clinic/${clinicId}/queue/sse/?token=${sseToken}`;
+        const url = `${axios.defaults.baseURL}appointment/clinic/${clinicId}/queue/sse/?token=${sseToken}`;
         const eventSource = new EventSource(url);
 
         eventSource.onopen = () => {

@@ -77,8 +77,9 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
-    ports:
-      - "8000:8000"
+      - logs_volume:/app/logs
+    # ports:
+    #   - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -95,31 +96,15 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Telegram Bot Service
-  telegram_bot:
-    build:
-      context: ./bot
-      dockerfile: Dockerfile
-    container_name: medbooker_telegram_bot
-    restart: unless-stopped
-    env_file:
-      - ./bot/.env
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - medbooker_network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   # React Frontend с Nginx
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost/api/
+        VITE_TELEGRAM_BOT_TOKEN: 8029178186:AAFII53RU03vb7I0KMOJfevE9KvKxC9pa48
+        VITE_TELEGRAM_CHAT_ID: 5870295662
     container_name: medbooker_frontend
     restart: unless-stopped
     ports:
@@ -141,6 +126,8 @@ volumes:
   static_volume:
     driver: local
   media_volume:
+    driver: local
+  logs_volume:
     driver: local
 
 networks:

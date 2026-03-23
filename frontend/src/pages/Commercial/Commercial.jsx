@@ -1,11 +1,12 @@
-import { API_BASE_URL } from '../../config';
 import './Commercial.css';
+
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 
 const Commercial = () => {
 
     const handleDocument = (version) => {
-        const url = `${API_BASE_URL}/core/document/commercial/${version}/`;
+        const url = `${VITE_API_URL}/core/document/commercial/${version}/`;
         window.open(url, '_blank');
     };
 
@@ -50,7 +51,7 @@ const Commercial = () => {
                             </a>
                             <a href="https://t.me/mrkarkk" target="_blank" rel="noopener noreferrer" className="contact-link-commercial">
                                 <span className="contact-icon">💬</span>
-                                <span>Telegram: @mrkarkk</span>
+                                <span>Telegram: @aziz070724</span>
                             </a>
                         </div>
                     </div>

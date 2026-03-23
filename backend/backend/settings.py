@@ -1,5 +1,5 @@
 from pathlib import Path
-import os
+import os, sys
 from dotenv import load_dotenv
 from datetime import timedelta
 
@@ -240,7 +240,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
             'style': '{',
         },
         'simple': {
@@ -248,24 +248,26 @@ LOGGING = {
             'style': '{',
         },
     },
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
-        },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
     },
     'handlers': {
         'console': {
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'stream': sys.stdout,           
         },
         'file': {
-            'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler', 
             'filename': BASE_DIR / 'logs' / 'django.log',
-            'maxBytes': 1024 * 1024 * 10,  # 10 MB
-            'backupCount': 5,
+            'maxBytes': 10 * 1024 * 1024,       # 10 МБ
+            'backupCount': 5,                   # 5 файлов по 10 МБ
+            'mode': 'a',
             'formatter': 'verbose',
+            'encoding': 'utf-8',
         },
     },
     'loggers': {
@@ -276,14 +278,17 @@ LOGGING = {
         },
         'django.request': {
             'handlers': ['console', 'file'],
-            'level': 'WARNING',
-            'propagate': False,
-        },
-        'core': {
-            'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,
         },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'core': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
+        'appointment': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
+        'users': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
     },
 }
 
@@ -331,11 +336,6 @@ if DEBUG:
         'level': 'DEBUG',
         'propagate': False,
     }
-
-# Настройки для Bot Service
-BOT_SERVICE_URL = os.getenv('BOT_SERVICE_URL', 'http://0.0.0.0:3000')
-BOT_API_SECRET = os.getenv('BOT_API_SECRET', 'your-secret-key')
-SUPERADMIN_TELEGRAM_ID = [int(x) for x in os.getenv('SUPERADMIN_TELEGRAM_ID', '').split(',') if x.strip().isdigit()]
 
 # Настройки для SpeechKit
 SPEECHKIT_API_KEY = os.getenv('SPEECHKIT_API_KEY', '')

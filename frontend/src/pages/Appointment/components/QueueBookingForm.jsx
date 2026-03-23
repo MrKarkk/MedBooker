@@ -70,7 +70,7 @@ const QueueBookingForm = ({
                                 value={formData.patient_full_name}
                                 onChange={handleChange}
                                 placeholder="ФИО пациента"
-                                required
+                                // required
                             />
                             
                             <InputSearch
@@ -78,8 +78,8 @@ const QueueBookingForm = ({
                                 type="tel"
                                 value={formData.patient_phone}
                                 onChange={handleChange}
-                                placeholder="+7 (999) 000-00-00"
-                                required
+                                placeholder="+992 (00) 000-00-00"
+                                // required
                             />
 
                             {isBookingForServices && (
@@ -103,7 +103,7 @@ const QueueBookingForm = ({
                                     name="doctor_id"
                                     options={availableDoctors.map(d => ({ 
                                         value: d.id, 
-                                        label: `${d.full_name} - ${d.specialization}` 
+                                        label: `${d.full_name}` 
                                     }))}
                                     onChange={handleChange}
                                     value={formData.doctor_id}

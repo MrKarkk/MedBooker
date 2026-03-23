@@ -2,7 +2,7 @@ import { useState } from 'react';
 import TelGif from '../../assets/gif/Contact us.gif'
 import EmailGif from '../../assets/gif/contact-email.gif' 
 import ClockGif from '../../assets/gif/Waiting.gif'
-import coreAPI from '../../services/core';
+import { sendNotification } from '../../services/notificattionTg';
 import './Contacts.css';
 
 
@@ -57,14 +57,16 @@ const Contacts = () => {
 
         if (!validateForm()) return;
 
-        const payload = {
-            full_name: formData.fullName,
-            email: formData.email,
-            message: formData.message,
-        };
+        const full_name = formData.fullName;
+        const email = formData.email;
+        const message = formData.message;
 
         try {
-            await coreAPI.sendReceivedMessage(payload);
+            const success = await sendNotification(full_name, email, message);
+
+            if (!success) {
+                throw new Error('Не удалось отправить сообщение. Пожалуйста, попробуйте позже.');
+            }
             setIsSubmitted(true);
 
             // Очистка формы
