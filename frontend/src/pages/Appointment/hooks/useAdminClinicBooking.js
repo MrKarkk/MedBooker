@@ -80,9 +80,9 @@ export const useAdminClinicBooking = (clinicId) => {
         // Валидация входных данных
         const { patient_full_name, patient_phone, service_id, doctor_id } = bookingData;
 
-        if (!patient_full_name || !patient_phone) {
-            throw new Error('ФИО и телефон пациента обязательны');
-        }
+        // if (!patient_full_name || !patient_phone) {
+        //     throw new Error('ФИО и телефон пациента обязательны');
+        // }
 
         // Проверка в зависимости от настроек клиники
         if (queueSettings.is_booking_for_services && !service_id) {

@@ -12,7 +12,6 @@ from django.middleware import csrf
 from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta, datetime
 from django.conf import settings
-from core.notifications import send_event_async
 from .models import RefreshToken
 from .serializers import *
 
@@ -61,18 +60,6 @@ def register_view(request):
     if serializer.is_valid():
         user = serializer.save()
         tokens = get_tokens_for_user(user)
-
-        send_event_async({
-            "event": "registration",
-            "tg_id": tg_targets,
-            "data": {
-                "name": getattr(user, 'full_name', None),
-                "phone": getattr(user, 'phone_number', None),
-                "email": user.email,
-                "date": now.strftime("%d-%m-%Y"),
-                "time": now.strftime("%H:%M:%S"),
-            }
-        })
         
         response_data = {
             'user': UserSerializer(user).data,
@@ -152,19 +139,6 @@ def login_view(request):
     
     # Генерируем токены
     tokens = get_tokens_for_user(user)
-
-    send_event_async({
-        "event": "authorization",
-        "tg_id": tg_targets,
-        "data": {
-            "name": getattr(user, 'full_name', None),
-            "phone": getattr(user, 'phone_number', None),
-            "email": user.email,
-            "role": getattr(user, 'role', None),
-            "date": now.strftime("%d-%m-%Y"),
-            "time": now.strftime("%H:%M:%S"),
-        }
-    })
     
     # Создаем response
     response_data = {
@@ -327,17 +301,6 @@ def me_view(request):
     Получение информации о текущем пользователе
     """
     serializer = UserSerializer(request.user)
-    # send_event_async({
-    #     "event": "test",
-    #     "tg_id": tg_targets,
-    #     "data": {
-    #         # "name": getattr(request.user, 'full_name', None),
-    #         # "email": request.user.email,
-    #         # "role": getattr(request.user, 'role', None),
-    #         # "date": now.strftime("%d-%m-%Y"),
-    #         # "time": now.strftime("%H:%M:%S"),
-    #     }
-    # })
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 

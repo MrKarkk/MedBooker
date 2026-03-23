@@ -4,9 +4,9 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('core/', include('core.urls')),
-    path('users/', include('users.urls')),
-    path('appointment/', include('appointment.urls')),
+    path('api/core/', include('core.urls')),
+    path('api/users/', include('users.urls')),
+    path('api/appointment/', include('appointment.urls')),
 ]
 
 # Django Debug Toolbar URLs (только для DEBUG=True)

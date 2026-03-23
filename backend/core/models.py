@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 from users.models import User
+from .utils import *
 
 
 class Clinic(models.Model):
@@ -9,8 +10,8 @@ class Clinic(models.Model):
     city = models.CharField(max_length=100, db_index=True)
 
     address = models.CharField(max_length=255)
-    working_hours = models.JSONField(default={"mon": ["09:00", "18:00"], "tue": ["09:00", "18:00"], "wed": ["09:00", "18:00"], "thu": ["09:00", "18:00"], "fri": ["09:00", "18:00"], "sat": ["10:00", "16:00"], "sun": []}) 
-    working_days = models.JSONField(default={"mon": True, "tue": True, "wed": True, "thu": True, "fri": True, "sat": True, "sun": False}) 
+    working_hours = models.JSONField(default=default_working_hours) 
+    working_days = models.JSONField(default=default_working_days) 
 
     phone_number = models.CharField(max_length=20, validators=[RegexValidator(r'^\+?\d{7,15}$')])
     email = models.EmailField()
@@ -70,9 +71,9 @@ class Doctor(models.Model):
 
     clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE, related_name='doctors')
     specialty = models.CharField(max_length=100, db_index=True) # Специальность
-    working_days = models.JSONField(default={"mon": True, "tue": True, "wed": True, "thu": True, "fri": True, "sat": True, "sun": False}) 
-    working_hours = models.JSONField(default={"mon": ["09:00", "18:00"], "tue": ["09:00", "18:00"], "wed": ["09:00", "18:00"], "thu": ["09:00", "18:00"], "fri": ["09:00", "18:00"], "sat": ["10:00", "16:00"], "sun": []})
-    lunch_time = models.JSONField(default={"mon": ["13:00", "14:00"], "tue": ["13:00", "14:00"], "wed": ["13:00", "14:00"], "thu": ["13:00", "14:00"], "fri": ["13:00", "14:00"], "sat": ["12:00", "13:00"], "sun": []})
+    working_days = models.JSONField(default=default_working_days)
+    working_hours = models.JSONField(default=default_working_hours)
+    lunch_time = models.JSONField(default=default_lunch_time)
     cabinet_number = models.CharField(max_length=50, blank=True) 
 
     work_experience = models.IntegerField(help_text="Опыт работы в годах", default=0)

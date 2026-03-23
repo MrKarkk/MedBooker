@@ -95,7 +95,7 @@ const AppointmentPage = () => {
     // Обычный режим - поиск и запись к врачам
     return (
         <div className="appointment-page">
-            <Hero />
+            {/* <Hero /> */}
 
             <SearchForm
                 services={search.services}

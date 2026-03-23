@@ -29,6 +29,7 @@ def serve_pdf_file(
         file = open(file_path, 'rb')
         response = FileResponse(file, content_type=content_type)
         response['Content-Disposition'] = f'attachment; filename="{download_name}"'
+        logger.info(f"Файл {file_name} успешно загружен и отправлен клиенту")
         return response
     except Exception as e:
         logger.exception("Ошибка при загрузке файла %s", file_name)
@@ -73,7 +74,7 @@ def patient_call_synthesis_in_memory(patient_name, number_coupon, cabinet_number
         elif not number_coupon:
             text = f"Уважаемый {patient_name}! Пожалуйста подойдите в кабинет {cabinet_number}."
         elif cabinet_number:
-            text = f"Уважаемый {patient_name}! Ваш талон номер {number_coupon_res}, при+ём в кабинете sil<[2]> {cabinet_number}."
+            text = f"Пациент с талоном номер {number_coupon_res}, пожалуйста подойдите в кабинет {cabinet_number}."
         else:
             text = f"Уважаемый {patient_name}! Ваш талон номер {number_coupon_res}, пожалуйста подойдите к врачу."
 
@@ -115,3 +116,13 @@ def patient_call_synthesis_in_memory(patient_name, number_coupon, cabinet_number
     except Exception as e:
         logger.exception(f"[ERROR] Исключение при синтезе речи для {patient_name}: {str(e)}")
         return None
+
+
+def default_working_days():
+    return {"mon": True, "tue": True, "wed": True, "thu": True, "fri": True, "sat": True, "sun": False}
+
+def default_working_hours():
+    return {"mon": ["09:00", "18:00"], "tue": ["09:00", "18:00"], "wed": ["09:00", "18:00"], "thu": ["09:00", "18:00"], "fri": ["09:00", "18:00"], "sat": ["10:00", "16:00"], "sun": []}
+
+def default_lunch_time():
+    return {"mon": ["13:00", "14:00"], "tue": ["13:00", "14:00"], "wed": ["13:00", "14:00"], "thu": ["13:00", "14:00"], "fri": ["13:00", "14:00"], "sat": ["12:00", "13:00"], "sun": []}

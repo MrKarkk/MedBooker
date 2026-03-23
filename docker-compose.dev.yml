@@ -27,18 +27,6 @@ services:
     depends_on:
       - postgres
 
-  telegram_bot:
-    build:
-      context: ./bot
-      dockerfile: Dockerfile.dev
-    container_name: medbooker_bot_dev
-    volumes:
-      - ./bot:/app
-    env_file:
-      - ./bot/.env
-    depends_on:
-      - backend
-
   frontend:
     build:
       context: ./frontend

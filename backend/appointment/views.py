@@ -1,5 +1,6 @@
 import json
 import time
+import logging
 from datetime import datetime, timedelta
 
 from django.conf import settings
@@ -25,10 +26,10 @@ from .serializers import *
 
 
 now = datetime.now()
-tg_targets = getattr(settings, 'SUPERADMIN_TELEGRAM_ID', '')
 sse_clients = {}
 # Глобальный словарь для отслеживания статусов записей (чтобы не синтезировать повторно)
 appointment_statuses = {}
+logger = logging.getLogger(__name__)
 
 
 @api_view(['POST'])
@@ -43,6 +44,7 @@ def search_available_doctors(request):
     search_date_str = request.data.get('date')
     
     if not all([service_id, city, search_date_str]):
+        logger.debug(f"Неполные данные для поиска врачей: {request.data}")
         return Response(
             {'error': 'Необходимо указать услугу, город и дату'},
             status=status.HTTP_400_BAD_REQUEST
@@ -51,6 +53,7 @@ def search_available_doctors(request):
     try:
         search_date = datetime.strptime(search_date_str, '%Y-%m-%d').date()
     except ValueError:
+        logger.debug(f"Неверный формат даты: {search_date_str}")
         return Response(
             {'error': 'Неверный формат даты. Используйте YYYY-MM-DD'},
             status=status.HTTP_400_BAD_REQUEST
@@ -59,7 +62,9 @@ def search_available_doctors(request):
     try:
         from core.models import Service
         service = Service.objects.get(id=service_id)
+        logger.debug(f"Найдена услуга для поиска: {service.name} (ID: {service_id})")
     except Service.DoesNotExist:
+        logger.debug(f"Услуга {service_id} не найдена")
         return Response(
             {'error': 'Услуга не найдена'},
             status=status.HTTP_404_NOT_FOUND
@@ -77,6 +82,7 @@ def search_available_doctors(request):
     ).select_related('clinic').prefetch_related('services').distinct()
     
     if not doctors.exists():
+        logger.debug(f"Врачи для услуги {service.name} в городе {city} не найдены")
         return Response(
             {'message': 'Врачи не найдены', 'doctors': []},
             status=status.HTTP_200_OK
@@ -121,6 +127,7 @@ def search_available_doctors(request):
         reverse=True
     )
     
+    logger.debug(f"Найдено {len(results)} врачей с доступными слотами для услуги {service.name} в городе {city}")
     return Response({
         'doctors': results,
         'search_params': {
@@ -158,6 +165,7 @@ def create_appointment(request):
             )
             
             if not is_available:
+                logger.debug(f"Попытка забронировать занятый слот: Врач {doctor.full_name}, Дата {appointment_date}, Время {time_start}")
                 return Response(
                     {'error': error_message or 'Выбранный временной слот недоступен'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -165,43 +173,12 @@ def create_appointment(request):
             
             appointment = serializer.save(created_by='patient', status='pending')
 
-            # Получаем tg_id всех админов клиники (без пустых значений)
-            try:
-                clinic_admin_tg_ids = list(
-                    appointment.clinic.admin.exclude(tg_id__isnull=True).exclude(tg_id__exact='')
-                    .values_list('tg_id', flat=True)
-                )
-            except Exception:
-                clinic_admin_tg_ids = []
-
-            # Объединяем SUPERADMIN_TELEGRAM_ID и админов клиники
-            targets = []
-            if tg_targets:
-                if isinstance(tg_targets, (list, tuple)):
-                    targets.extend(tg_targets)
-                else:
-                    targets.append(tg_targets)
-            targets.extend(clinic_admin_tg_ids)
-
-            # Ищем пользователя в БД, у которого совпадает ФИО и номер телефона
-            patient_tg = None
-            try:
-                patient_full = appointment.patient_full_name.strip() if appointment.patient_full_name else ''
-                patient_phone = appointment.patient_phone
-                if patient_full and patient_phone:
-                    patient_user = User.objects.filter(
-                        full_name__iexact=patient_full,
-                        phone_number=patient_phone
-                    ).first()
-                    if patient_user and getattr(patient_user, 'tg_id', None):
-                        patient_tg = patient_user.tg_id
-            except Exception:
-                patient_tg = None
-                
         # Возвращаем полные данные с названиями
         full_serializer = AppointmentSerializer(appointment)
+        logger.debug(f"Возвращаем {full_serializer} полные данные с названиями")
         return Response(full_serializer.data, status=status.HTTP_201_CREATED)
     
+    logger.debug(f"Ошибка при создании записи {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
@@ -218,8 +195,10 @@ def get_user_appointments(request):
         ).select_related('doctor', 'clinic', 'service').order_by('-date', '-time_start')
 
         serializer = AppointmentSerializer(appointments, many=True)
+        logger.debug(f"Успешнаю отправка записи пользователя: {user}")
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
+        logger.debug(f"Пользователь {user} пытается просмотреть записи, но не является врачом")
         return Response(
             {'error': 'Только врачи могут просматривать свои записи'},
             status=status.HTTP_403_FORBIDDEN
@@ -269,11 +248,13 @@ def update_appointment(request, appointment_id):
         try:
             appointment = Appointment.objects.select_related('clinic').get(id=appointment_id)
         except Appointment.DoesNotExist:
+            logger.debug(f"Не найден запись: {appointment}")
             return Response(
                 {'error': 'Запись не найдена'},
                 status=status.HTTP_404_NOT_FOUND
             )
         if not user.clinics.filter(id=appointment.clinic_id).exists():
+            logger.debug(f"Пользователь {user} пытается просмотреть все записи, но не является админов")
             return Response(
                 {'error': 'У вас нет доступа к этой записи'},
                 status=status.HTTP_403_FORBIDDEN
@@ -284,6 +265,7 @@ def update_appointment(request, appointment_id):
         try:
             appointment = Appointment.objects.get(id=appointment_id, doctor__full_name=user.full_name)
         except Appointment.DoesNotExist:
+            logger.debug(f"Не найден запись: {appointment}")
             return Response(
                 {'error': 'Запись не найдена или у вас нет доступа'},
                 status=status.HTTP_404_NOT_FOUND
@@ -291,26 +273,11 @@ def update_appointment(request, appointment_id):
         allowed_fields = ['status', 'comment']  # Врач может менять только статус и комментарий
         # Оставим возможность расширить список разрешённых полей
     else:
+        logger.debug(f"Пользователь {user} пытается изменит запись {appointment}, но не является админов")
         return Response(
             {'error': 'У вас нет прав для изменения записей'},
             status=status.HTTP_403_FORBIDDEN
         )
-
-    # Оставим поиск patient_tg только для админа (если нужно)
-    if user.role == 'clinic_admin':
-        patient_tg = None
-        try:
-            patient_full = appointment.patient_full_name.strip() if appointment.patient_full_name else ''
-            patient_phone = appointment.patient_phone
-            if patient_full and patient_phone:
-                patient_user = User.objects.filter(
-                    full_name__iexact=patient_full,
-                    phone_number=patient_phone
-                ).first()
-                if patient_user and getattr(patient_user, 'tg_id', None):
-                    patient_tg = patient_user.tg_id
-        except Exception:
-            patient_tg = None
 
     # Оставляем только разрешённые поля для врача
     data = request.data
@@ -321,7 +288,9 @@ def update_appointment(request, appointment_id):
     if serializer.is_valid():
         serializer.save()
         full_serializer = AppointmentSerializer(appointment)
+        logger.debug(f"Успешно обновлена запись: {full_serializer.data}")
         return Response(full_serializer.data, status=status.HTTP_200_OK)
+    logger.debug(f"Ошибка при обновлении записи {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -403,7 +372,7 @@ def get_clinic_queue_settings(request, clinic_id):
     doctors_data = [{
         'id': d.id,
         'full_name': d.full_name,
-        'specialization': d.specialty,
+        # 'specialization': d.specialty,
         'cabinet_number': d.cabinet_number
     } for d in doctors]
     
@@ -463,11 +432,11 @@ def create_queue_appointment_by_admin(request, clinic_id):
     patient_full_name = request.data.get('patient_full_name')
     patient_phone = request.data.get('patient_phone')
     
-    if not patient_full_name or not patient_phone:
-        return Response(
-            {'error': 'Необходимо указать ФИО и телефон пациента'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+    # if not patient_full_name or not patient_phone:
+    #     return Response(
+    #         {'error': 'Необходимо указать ФИО и телефон пациента'},
+    #         status=status.HTTP_400_BAD_REQUEST
+    #     )
     
     # Определяем врача
     doctor = None
@@ -549,7 +518,7 @@ def create_queue_appointment_by_admin(request, clinic_id):
     has_active_appointments = Appointment.objects.filter(
         doctor=doctor,
         date=appointment_date,
-        status__in=['invited', 'pending']
+        status__in=['invited', 'pending', 'confirmed']
     ).exists()
     
     # Проверяем время обеда
@@ -568,7 +537,7 @@ def create_queue_appointment_by_admin(request, clinic_id):
     if not has_active_appointments and not is_lunch_time:
         appointment_status = 'invited'
     else:
-        appointment_status = 'pending'
+        appointment_status = 'confirmed'
     
     # Создаем запись
     with transaction.atomic():
@@ -739,9 +708,3 @@ def queue_appointments_sse(request, clinic_id):
     return response
 
 
-def broadcast_queue_update(clinic_id):
-    """Отправка обновления всем подключенным SSE клиентам"""
-    # Эта функция будет вызываться при изменении статуса
-    # В Django без дополнительных библиотек (Redis, Channels) 
-    # сложно реализовать push-уведомления, поэтому используем polling через SSE
-    pass
