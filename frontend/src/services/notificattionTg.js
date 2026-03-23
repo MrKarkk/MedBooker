@@ -1,5 +1,4 @@
-const TELEGRAM_BOT_TOKEN = import.meta.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = import.meta.env.TELEGRAM_CHAT_ID;
+import { TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID } from '../config';
 
 
 export const sendNotification = async (full_name, email, message) => {

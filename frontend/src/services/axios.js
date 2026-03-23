@@ -1,11 +1,10 @@
 import axios from 'axios';
-
-const VITE_API_URL = import.meta.env.VITE_API_URL;
+import { API_BASE_URL } from '../config';
 
 
 // Создаем экземпляр axios с поддержкой http-only cookies
 const apiClient = axios.create({
-    baseURL: VITE_API_URL,
+    baseURL: API_BASE_URL,
     withCredentials: true, // КРИТИЧНО! Включаем отправку cookies
     headers: {
         'Content-Type': 'application/json',
