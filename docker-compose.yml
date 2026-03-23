@@ -101,6 +101,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost/api/
+        VITE_TELEGRAM_BOT_TOKEN: 8029178186:AAFII53RU03vb7I0KMOJfevE9KvKxC9pa48
+        VITE_TELEGRAM_CHAT_ID: 5870295662
     container_name: medbooker_frontend
     restart: unless-stopped
     ports:

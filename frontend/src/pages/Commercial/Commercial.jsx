@@ -1,11 +1,13 @@
 import './Commercial.css';
 import { API_BASE_URL } from '../config';
 
+const VITE_API_URL = import.meta.env.VITE_API_URL;
+
 
 const Commercial = () => {
 
     const handleDocument = (version) => {
-        const url = `${API_BASE_URL}/core/document/commercial/${version}/`;
+        const url = `${VITE_API_URL}/core/document/commercial/${version}/`;
         window.open(url, '_blank');
     };
 
