@@ -83,6 +83,7 @@ const AppointmentPage = () => {
                     onCreateAppointment={queue.createQueueAppointment}
                     notify={notify}
                     canCreateAppointments={queue.canCreateAppointments}
+                    stats={queue.stats}
                 />
                 <NotificationContainer 
                     notifications={notifications} 

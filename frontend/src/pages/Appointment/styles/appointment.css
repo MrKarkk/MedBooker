@@ -4,6 +4,74 @@
     padding: 0 3rem;
 }
 
+/* ===== Queue Stats ===== */
+.queue-stats {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(198, 166, 103, 0.2);
+}
+
+.queue-stats__title {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(198, 166, 103, 0.7);
+    margin-bottom: 1.25rem;
+}
+
+.queue-stats__grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .queue-stats__grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.queue-stats__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 1.25rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.04);
+    transition: background 0.2s;
+}
+
+.queue-stats__card--total   { border-color: rgba(255, 255, 255, 0.1); }
+.queue-stats__card--waiting { border-color: rgba(234, 179, 8, 0.35);  background: rgba(234, 179, 8, 0.06); }
+.queue-stats__card--invited { border-color: rgba(59, 130, 246, 0.35); background: rgba(59, 130, 246, 0.06); }
+.queue-stats__card--finished{ border-color: rgba(34, 197, 94, 0.35);  background: rgba(34, 197, 94, 0.06); }
+.queue-stats__card--urgent   { border-color: rgba(234, 79, 8, 0.35);  background: rgba(234, 79, 8, 0.06); }
+
+.queue-stats__value {
+    font-family: 'Inter', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.queue-stats__card--total   .queue-stats__value { color: #fff; }
+.queue-stats__card--waiting .queue-stats__value { color: #eab308; }
+.queue-stats__card--invited .queue-stats__value { color: #60a5fa; }
+.queue-stats__card--finished .queue-stats__value { color: #4ade80; }
+.queue-stats__card--urgent   .queue-stats__value { color: #ea4f08; }
+
+.queue-stats__label {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+    letter-spacing: 0.3px;
+}
+
 /* Hero Section */
 .appointment-hero {
     position: relative;

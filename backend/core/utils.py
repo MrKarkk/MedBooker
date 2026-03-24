@@ -28,7 +28,12 @@ def serve_pdf_file(
     try:
         file = open(file_path, 'rb')
         response = FileResponse(file, content_type=content_type)
-        response['Content-Disposition'] = f'attachment; filename="{download_name}"'
+        # RFC 5987 кодировка для корректной передачи не-ASCII имён файлов
+        from urllib.parse import quote
+        encoded_name = quote(download_name, safe='')
+        response['Content-Disposition'] = (
+            f"attachment; filename*=UTF-8''{encoded_name}"
+        )
         logger.info(f"Файл {file_name} успешно загружен и отправлен клиенту")
         return response
     except Exception as e:
@@ -37,6 +42,40 @@ def serve_pdf_file(
             {'error': f'Ошибка при загрузке файла: {str(e)}'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+def send_telegram_notification(full_name: str, email: str, message: str) -> bool:
+    """
+    Отправляет уведомление о новом сообщении с контактной формы в Telegram-чат администратора.
+    Токен и chat_id берутся из переменных окружения TELEGRAM_BOT_TOKEN и TELEGRAM_ADMIN_CHAT_ID.
+    """
+    bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
+    chat_id = getattr(settings, 'TELEGRAM_ADMIN_CHAT_ID', None)
+
+    if not bot_token or not chat_id:
+        logger.warning("TELEGRAM_BOT_TOKEN или TELEGRAM_ADMIN_CHAT_ID не настроены — уведомление не отправлено")
+        return False
+
+    text = (
+        "📩 <b>Новое сообщение с сайта</b>\n\n"
+        f"👤 <b>ФИО:</b> {full_name}\n"
+        f"📧 <b>Email:</b> {email}\n\n"
+        f"💬 <b>Сообщение:</b>\n{message}"
+    )
+
+    try:
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        response = requests.post(
+            url,
+            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+            timeout=10,
+        )
+        response.raise_for_status()
+        logger.info("Telegram-уведомление отправлено для %s", email)
+        return True
+    except Exception as exc:
+        logger.error("Ошибка отправки Telegram-уведомления: %s", exc)
+        return False
+
 
 def user_verification(user, role_user, text_error):
     """Проверка верификации пользователя"""

@@ -25,7 +25,6 @@ from .models import Appointment
 from .serializers import *
 
 
-now = datetime.now()
 sse_clients = {}
 # Глобальный словарь для отслеживания статусов записей (чтобы не синтезировать повторно)
 appointment_statuses = {}
@@ -187,8 +186,6 @@ def get_user_appointments(request):
     """Получение записей текущего пользователя"""
     user = request.user
     
-    user_verification(user, 'clinic_admin', 'У вас нет прав для просмотра записей')
-    
     if user.role == 'doctor':
         appointments = Appointment.objects.filter(
             doctor__full_name=user.full_name
@@ -211,10 +208,13 @@ def get_user_appointments(request):
 def get_clinic_appointments(request, clinic_id):
     """Получение всех записей клиники за последние 7 дней (для администраторов клиники и очереди)"""
     user = request.user
-    
-    user_verification(user, 'clinic_admin', 'У вас нет прав для просмотра записей')
-    user_verification(user, 'clinic_queue_admin', 'У вас нет прав для просмотра записей')
-    
+
+    if user.role not in ['clinic_admin', 'clinic_queue_admin']:
+        return Response(
+            {'error': 'У вас нет прав для просмотра записей'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+
     # Проверка, что клиника принадлежит пользователю
     if not user.clinics.filter(id=clinic_id).exists():
         return Response(
@@ -248,7 +248,7 @@ def update_appointment(request, appointment_id):
         try:
             appointment = Appointment.objects.select_related('clinic').get(id=appointment_id)
         except Appointment.DoesNotExist:
-            logger.debug(f"Не найден запись: {appointment}")
+            logger.debug(f"Запись {appointment_id} не найдена")
             return Response(
                 {'error': 'Запись не найдена'},
                 status=status.HTTP_404_NOT_FOUND
@@ -265,7 +265,7 @@ def update_appointment(request, appointment_id):
         try:
             appointment = Appointment.objects.get(id=appointment_id, doctor__full_name=user.full_name)
         except Appointment.DoesNotExist:
-            logger.debug(f"Не найден запись: {appointment}")
+            logger.debug(f"Запись {appointment_id} не найдена или врач не имеет доступа")
             return Response(
                 {'error': 'Запись не найдена или у вас нет доступа'},
                 status=status.HTTP_404_NOT_FOUND
@@ -273,7 +273,7 @@ def update_appointment(request, appointment_id):
         allowed_fields = ['status', 'comment']  # Врач может менять только статус и комментарий
         # Оставим возможность расширить список разрешённых полей
     else:
-        logger.debug(f"Пользователь {user} пытается изменит запись {appointment}, но не является админов")
+        logger.debug(f"Пользователь {user} пытается изменить запись {appointment_id}, но не имеет прав")
         return Response(
             {'error': 'У вас нет прав для изменения записей'},
             status=status.HTTP_403_FORBIDDEN
@@ -353,37 +353,42 @@ def get_clinic_queue_settings(request, clinic_id):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    # Получение услуг и врачей клиники
-    services = Service.objects.filter(
-        doctors__clinic=clinic,
-        doctors__is_active=True
-    ).distinct()
-    
-    services_data = [{
-        'id': s.id,
-        'name': s.name
-    } for s in services]
-    
+    today = datetime.now().date()
+
     doctors = Doctor.objects.filter(
         clinic=clinic,
         is_active=True
     )
-    
+
     doctors_data = [{
         'id': d.id,
         'full_name': d.full_name,
-        # 'specialization': d.specialty,
-        'cabinet_number': d.cabinet_number
     } for d in doctors]
-    
+
+    from django.db.models import Count as _Count
+    status_counts = Appointment.objects.filter(
+        clinic=clinic,
+        date=today
+    ).aggregate(
+        total=_Count('id'),
+        invited=_Count('id', filter=Q(status='invited')),
+        confirmed=_Count('id', filter=Q(status='confirmed')),
+        finished=_Count('id', filter=Q(status='finished')),
+        urgent=_Count('id', filter=Q(status='urgent')),
+    )
+
     response_data = {
         'clinic_id': clinic.id,
         'clinic_name': clinic.name,
         'is_electronic_queue': clinic.is_electronic_queue,
         'is_booking_for_services': clinic.is_booking_for_services,
         'is_booking_for_doctors': clinic.is_booking_for_doctors,
-        'services': services_data,
-        'doctors': doctors_data
+        'doctors': doctors_data,
+        'total_appointments_today': status_counts['total'],
+        'invited_count': status_counts['invited'],
+        'confirmed_count': status_counts['confirmed'],
+        'finished_count': status_counts['finished'],
+        'urgent_count': status_counts['urgent'],
     }
     
     print(f"✅ Настройки очереди отправлены для клиники {clinic_id}: {response_data}")

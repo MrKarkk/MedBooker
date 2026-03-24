@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../components/Notification/useNotification';
+import { API_BASE_URL } from '../../config';
 import './Register.css';
-
-const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 
 const Register = () => {
@@ -312,9 +311,9 @@ const Register = () => {
                                     <span className="checkbox-custom"></span>
                                     <span className="checkbox-text">
                                         Я согласен с{' '}
-                                        <a href={`${VITE_API_URL}/core/document/terms-of-service/`} target="_blank">Условиями использования</a>
+                                        <a href={`${API_BASE_URL}/core/document/terms-of-service/`} target="_blank">Условиями использования</a>
                                         {' '}и{' '}
-                                        <a href={`${VITE_API_URL}/core/document/privacy-policy/`} target="_blank">Политикой конфиденциальности</a>
+                                        <a href={`${API_BASE_URL}/core/document/privacy-policy/`} target="_blank">Политикой конфиденциальности</a>
                                     </span>
                                 </label>
                                 {errors.agreed && (

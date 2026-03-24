@@ -77,7 +77,7 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
-      - logs_volume:/app/logs
+      - ./backend/logs:/app/logs
     # ports:
     #   - "8000:8000"
     depends_on:
@@ -101,10 +101,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        VITE_API_URL: http://localhost/api/
-        VITE_TELEGRAM_BOT_TOKEN: 8029178186:AAFII53RU03vb7I0KMOJfevE9KvKxC9pa48
-        VITE_TELEGRAM_CHAT_ID: 5870295662
     container_name: medbooker_frontend
     restart: unless-stopped
     ports:
@@ -126,8 +122,6 @@ volumes:
   static_volume:
     driver: local
   media_volume:
-    driver: local
-  logs_volume:
     driver: local
 
 networks:

@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL } from '../../../config';
 import './Footer.css';
-
-const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 
 const Footer = () => {
@@ -39,7 +37,7 @@ const Footer = () => {
                         <li><Link to="/help">Частые вопросы</Link></li>
                         <li><Link to="/help">Помощь</Link></li>
                         <li><Link to="/contact">Контакты</Link></li>
-                        <li><a href={`${VITE_API_URL}/core/document/privacy-policy/`} target="_blank" rel="noopener noreferrer">Политика конфиденциальности</a></li>
+                        <li><a href={`${API_BASE_URL}/core/document/privacy-policy/`} target="_blank" rel="noopener noreferrer">Политика конфиденциальности</a></li>
                         </ul>
                     </div>
 

@@ -19,14 +19,14 @@ logger = logging.getLogger(__name__)
 @permission_classes([AllowAny])
 def health_check(request):
     """Health check endpoint для Docker и мониторинга"""
-    logger.debug(f"Проверка здоровья запрошена по адресу {datetime.now()}")
+    logger.debug(f"Проверка здоровья запрошена {datetime.now()}")
     return Response({'status': 'healthy', 'service': 'backend'}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def document_commercial_proposal_full(request):
-    logger.debug(f"Запрос на получение полного коммерческого предложения по адресу {datetime.now()}")
+    logger.debug(f"Запрос на получение полного коммерческого предложения {datetime.now()}")
     return serve_pdf_file(
         file_name='MedBooker(full).pdf',
         download_name='MedBooker_Полное_предложение.pdf'
@@ -35,7 +35,7 @@ def document_commercial_proposal_full(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def document_commercial_proposal_life(request):
-    logger.debug(f"Запрос на получение коммерческого предложения для жизни по адресу {datetime.now()}")
+    logger.debug(f"Запрос на получение коммерческого предложения для жизни {datetime.now()}")
     return serve_pdf_file(
         file_name='MedBooker(life).pdf',
         download_name='MedBooker_Краткое_предложение.pdf'
@@ -44,7 +44,7 @@ def document_commercial_proposal_life(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def document_terms_of_service(request):
-    logger.debug(f"Запрос на получение условий использования по адресу {datetime.now()}")
+    logger.debug(f"Запрос на получение условий использования {datetime.now()}")
     return serve_pdf_file(
         file_name='УСЛОВИЯ ИСПОЛЬЗОВАНИЯ (RU).pdf',
         download_name='Условия_использования_MedBooker.pdf'
@@ -53,7 +53,7 @@ def document_terms_of_service(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def document_privacy_policy(request):
-    logger.debug(f"Запрос на получение политики конфиденциальности по адресу {datetime.now()}")
+    logger.debug(f"Запрос на получение политики конфиденциальности {datetime.now()}")
     return serve_pdf_file(
         file_name='ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ (RU).pdf',
         download_name='Политика_конфиденциальности_MedBooker.pdf'
@@ -62,9 +62,26 @@ def document_privacy_policy(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def get_faq_entries(request):
-    logger.debug(f"Запрос на получение списка FAQ по адресу {datetime.now()}")
+    logger.debug(f"Запрос на получение списка FAQ {datetime.now()}")
     """Получение списка часто задаваемых вопросов (FAQ)"""
     faq_entries = FAQEntry.objects.all().order_by('id')
     serializer = FAQEntrySerializer(faq_entries, many=True)
     logger.debug(f"Найдено {len(serializer.data)} FAQ записей")
     return Response({'faq_entries': serializer.data}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def received_message(request):
+    serializer = ReceivedMessageSerializer(data=request.data)
+    if serializer.is_valid():
+        instance = serializer.save()
+        logger.info(f"Сохранено новое сообщение от {instance.full_name}")
+        send_telegram_notification(
+            full_name=instance.full_name,
+            email=instance.email,
+            message=instance.message,
+        )
+        return Response({'message': 'Сообщение успешно отправлено'}, status=status.HTTP_201_CREATED)
+    logger.warning(f"Ошибка валидации сообщения: {serializer.errors}")
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

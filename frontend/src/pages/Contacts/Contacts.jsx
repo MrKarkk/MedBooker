@@ -2,7 +2,9 @@ import { useState } from 'react';
 import TelGif from '../../assets/gif/Contact us.gif'
 import EmailGif from '../../assets/gif/contact-email.gif' 
 import ClockGif from '../../assets/gif/Waiting.gif'
-import { sendNotification } from '../../services/notificattionTg';
+import coreAPI from '../../services/core';
+import { useNotification } from '../../components/Notification/useNotification';
+import NotificationContainer from '../../components/Notification/NotificationContainer';
 import './Contacts.css';
 
 
@@ -14,7 +16,7 @@ const Contacts = () => {
     });
 
     const [errors, setErrors] = useState({});
-    const [isSubmitted, setIsSubmitted] = useState(false);
+    const { notifications, success, error, loading, hide, removeNotification } = useNotification();
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -57,26 +59,21 @@ const Contacts = () => {
 
         if (!validateForm()) return;
 
-        const full_name = formData.fullName;
-        const email = formData.email;
-        const message = formData.message;
+        const loadingId = loading('Отправка сообщения...');
 
         try {
-            const success = await sendNotification(full_name, email, message);
+            await coreAPI.sendContactMessage({
+                full_name: formData.fullName,
+                email: formData.email,
+                message: formData.message,
+            });
 
-            if (!success) {
-                throw new Error('Не удалось отправить сообщение. Пожалуйста, попробуйте позже.');
-            }
-            setIsSubmitted(true);
-
-            // Очистка формы
+            hide(loadingId);
+            success('Спасибо! Ваше сообщение успешно отправлено.');
             setFormData({ fullName: '', email: '', message: '' });
-
-            // Скрыть сообщение об успехе через 5 секунд
-            setTimeout(() => setIsSubmitted(false), 5000);
         } catch (err) {
-            // Показываем простую ошибку — можно расширить
-            setErrors(prev => ({ ...prev, submit: err?.response?.data?.error || 'Ошибка отправки сообщения' }));
+            hide(loadingId);
+            error(err?.response?.data?.error || 'Ошибка отправки сообщения');
         }
     };
 
@@ -127,13 +124,6 @@ const Contacts = () => {
                         <p className="contact-page-form-description">
                             Заполните форму, и мы свяжемся с вами в ближайшее время
                         </p>
-
-                        {isSubmitted && (
-                            <div className="contact-page-success-message">
-                                <span className="contact-page-success-icon">✓</span>
-                                <p>Спасибо! Ваше сообщение успешно отправлено.</p>
-                            </div>
-                        )}
 
                         <form className="contact-page-contact-form" onSubmit={handleSubmit}>
                             <div className="contact-page-form-group">
@@ -191,6 +181,7 @@ const Contacts = () => {
                     </div>
                 </div>
             </div>
+            <NotificationContainer notifications={notifications} onRemove={removeNotification} />
         </div>
     );
 };

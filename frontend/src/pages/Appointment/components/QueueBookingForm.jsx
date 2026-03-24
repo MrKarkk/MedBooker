@@ -9,7 +9,8 @@ const QueueBookingForm = ({
     availableDoctors,
     onCreateAppointment,
     notify,
-    canCreateAppointments = false
+    canCreateAppointments = false,
+    stats = { total: 0, invited: 0, confirmed: 0 },
 }) => {
     const [formData, setFormData] = useState({
         patient_full_name: '',
@@ -78,7 +79,7 @@ const QueueBookingForm = ({
                                 type="tel"
                                 value={formData.patient_phone}
                                 onChange={handleChange}
-                                placeholder="+992 (00) 000-00-00"
+                                placeholder="+992 (90) 363-45-54"
                                 // required
                             />
 
@@ -122,6 +123,33 @@ const QueueBookingForm = ({
                         </form>
                         )}
                     </div>
+
+                    <div className="queue-stats">
+                        <div className="queue-stats__title">Статистика на сегодня</div>
+                        <div className="queue-stats__grid">
+                            <div className="queue-stats__card queue-stats__card--total">
+                                <span className="queue-stats__value">{stats.total}</span>
+                                <span className="queue-stats__label">Всего записей</span>
+                            </div>
+                            <div className="queue-stats__card queue-stats__card--urgent">
+                                <span className="queue-stats__value">{stats.urgent}</span>
+                                <span className="queue-stats__label">Срочные</span>
+                            </div>
+                            <div className="queue-stats__card queue-stats__card--waiting">
+                                <span className="queue-stats__value">{stats.confirmed}</span>
+                                <span className="queue-stats__label">Ожидают</span>
+                            </div>
+                            <div className="queue-stats__card queue-stats__card--invited">
+                                <span className="queue-stats__value">{stats.invited}</span>
+                                <span className="queue-stats__label">Приглашены</span>
+                            </div>
+                            <div className="queue-stats__card queue-stats__card--finished">
+                                <span className="queue-stats__value">{stats.finished}</span>
+                                <span className="queue-stats__label">Завершены</span>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </section>
         </div>

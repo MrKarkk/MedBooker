@@ -11,4 +11,5 @@ urlpatterns = [
     path('document/privacy-policy/', document_privacy_policy, name='document_privacy_policy'),
 
     path('faq/', get_faq_entries, name='get_faq_entries'),
+    path('contact/', received_message, name='received_message'),
 ]

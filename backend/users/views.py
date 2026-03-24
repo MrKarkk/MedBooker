@@ -16,13 +16,6 @@ from .models import RefreshToken
 from .serializers import *
 
 
-now = datetime.now()
-tg_targets = getattr(settings, 'SUPERADMIN_TELEGRAM_ID', '')
-
-if isinstance(tg_targets, str):
-    tg_targets = [int(x) for x in tg_targets.split(',') if x.strip().isdigit()]
-
-
 def is_super_admin(user):
     """Проверка, является ли пользователь супер-администратором"""
     return user.is_authenticated and user.role == 'super_admin'
@@ -35,7 +28,8 @@ def get_tokens_for_user(user):
     access = refresh.access_token
     
     # Сохраняем refresh token в БД
-    expires_at = timezone.now() + timedelta(days=14)
+    refresh_lifetime = settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', timedelta(days=1))
+    expires_at = timezone.now() + refresh_lifetime
     RefreshToken.objects.create(
         user=user,
         token=str(refresh),

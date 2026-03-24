@@ -135,7 +135,7 @@ export const useAdminClinicBooking = (clinicId) => {
         loading,
         error,
         hasAccess,
-        canCreateAppointments, // Может ли пользователь создавать записи
+        canCreateAppointments,
         
         // Методы
         createQueueAppointment,
@@ -147,5 +147,14 @@ export const useAdminClinicBooking = (clinicId) => {
         isBookingForDoctors: queueSettings?.is_booking_for_doctors || false,
         availableServices: queueSettings?.services || [],
         availableDoctors: queueSettings?.doctors || [],
+
+        // Statistics
+        stats: {
+            total: queueSettings?.total_appointments_today ?? 0,
+            invited: queueSettings?.invited_count ?? 0,
+            confirmed: queueSettings?.confirmed_count ?? 0,
+            finished: queueSettings?.finished_count ?? 0,
+            urgent: queueSettings?.urgent_count ?? 0,
+        },
     };
 };

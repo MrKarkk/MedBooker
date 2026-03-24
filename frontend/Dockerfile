@@ -41,13 +41,6 @@ RUN npm ci --ignore-scripts --prefer-offline || \
 # Копируем исходный код
 COPY . .
 
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-ARG VITE_TELEGRAM_BOT_TOKEN
-ENV VITE_TELEGRAM_BOT_TOKEN=$VITE_TELEGRAM_BOT_TOKEN
-ARG VITE_TELEGRAM_CHAT_ID
-ENV VITE_TELEGRAM_CHAT_ID=$VITE_TELEGRAM_CHAT_ID
-
 # Сборка production версии
 RUN npm run build
 
