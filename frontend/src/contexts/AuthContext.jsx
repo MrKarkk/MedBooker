@@ -36,9 +36,18 @@ export const AuthProvider = ({ children }) => {
             setUser(response.data);
             setIsAuthenticated(true);
         } catch (error) {
-            // 401 при первом запуске - это нормально (пользователь не авторизован)
-            // Логируем только неожиданные ошибки
-            if (error.response?.status !== 401) {
+            if (error.response?.status === 401) {
+                // Access token истёк — пробуем обновить через refresh token
+                try {
+                    await apiClient.post('/users/refresh/');
+                    const retryResponse = await apiClient.get('/users/me/');
+                    setUser(retryResponse.data);
+                    setIsAuthenticated(true);
+                    return;
+                } catch {
+                    // Refresh token тоже недействителен — пользователь не авторизован
+                }
+            } else {
                 console.error('Ошибка проверки авторизации:', error);
             }
             setUser(null);
@@ -69,9 +78,12 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Вход
-    const login = async (credentials) => {
+    const login = async (credentials, rememberMe = false) => {
         try {
-            const response = await apiClient.post('/users/login/', credentials);
+            const response = await apiClient.post('/users/login/', {
+                ...credentials,
+                remember_me: rememberMe,
+            });
             setUser(response.data.user);
             setIsAuthenticated(true);
             return { success: true, data: response.data };

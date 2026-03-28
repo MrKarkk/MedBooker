@@ -147,6 +147,8 @@ REST_FRAMEWORK = {
 
 ACCESS_TOKEN_LIFETIME_MINUTES = int(os.getenv('ACCESS_TOKEN_LIFETIME_MINUTES', '5'))  # Уменьшаем до 5 минут
 REFRESH_TOKEN_LIFETIME_DAYS = int(os.getenv('REFRESH_TOKEN_LIFETIME_DAYS', '1'))  # 1 день для refresh
+DEFAULT_SECURE_COOKIE = False  # Включить, когда будет HTTPS
+DEFAULT_SAMESITE = 'Lax'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=ACCESS_TOKEN_LIFETIME_MINUTES),
@@ -178,14 +180,14 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_REFRESH': 'refresh',
     # Домен для cookie (None = текущий домен)
     'AUTH_COOKIE_DOMAIN': None,
-    # HTTPS only (False для разработки, True для продакшена)
-    'AUTH_COOKIE_SECURE': False,  # Установите True в production с HTTPS
+    # HTTPS only
+    'AUTH_COOKIE_SECURE': os.getenv('AUTH_COOKIE_SECURE', str(DEFAULT_SECURE_COOKIE)).lower() == 'true',
     # HTTP-only флаг - JavaScript не может получить доступ к cookie
     'AUTH_COOKIE_HTTP_ONLY': True,
     # Путь cookie
     'AUTH_COOKIE_PATH': '/',
-    # SameSite защита от CSRF (None для кросс-доменных запросов, Lax для продакшена)
-    'AUTH_COOKIE_SAMESITE': 'Lax',  # Измените на 'Strict' в production если не нужны кросс-доменные запросы
+    # SameSite защита от CSRF
+    'AUTH_COOKIE_SAMESITE': os.getenv('AUTH_COOKIE_SAMESITE', DEFAULT_SAMESITE),
 }
 
 cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173')
@@ -205,13 +207,13 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-SESSION_COOKIE_SECURE = False  # True в production с HTTPS
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', str(DEFAULT_SECURE_COOKIE)).lower() == 'true'
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'  # 'Strict' в production
+SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', DEFAULT_SAMESITE)
 
-CSRF_COOKIE_SECURE = False  # True в production с HTTPS
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', str(DEFAULT_SECURE_COOKIE)).lower() == 'true'
 CSRF_COOKIE_HTTPONLY = False  # False чтобы JS мог читать для CSRF токена
-CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = os.getenv('CSRF_COOKIE_SAMESITE', DEFAULT_SAMESITE)
 CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS  # Доверяем тем же origin что и для CORS
 
 # Expose CSRF token в headers для фронтенда
@@ -244,7 +246,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'format': '{levelname} {asctime} {module} {message}',
             'style': '{',
         },
         'simple': {
@@ -285,11 +287,6 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
-        'django.db.backends': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
         'core': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
         'appointment': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
         'users': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
@@ -314,13 +311,16 @@ if SENTRY_DSN and not DEBUG:
 if not DEBUG:
     # Минификация и сжатие
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-    
+
     # Security
-    SECURE_SSL_REDIRECT = True
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # SECURE_SSL_REDIRECT отключён: SSL терминируется на уровне nginx/proxy.
+    # Если в будущем появится HTTPS — включить обратно.
+    SECURE_SSL_REDIRECT = False
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
@@ -343,4 +343,7 @@ if DEBUG:
 
 # Настройки для SpeechKit
 SPEECHKIT_API_KEY = os.getenv('SPEECHKIT_API_KEY', '')
+SPEECHKIT_API_KEY_V3 = os.getenv('SPEECHKIT_API_KEY_V3', '')
+SPEECHKIT_FOLDER_ID_V3 = os.getenv('SPEECHKIT_FOLDER_ID_V3', '')
 SPEECHKIT_URL = os.getenv('SPEECHKIT_URL', '')
+SPEECHKIT_URL_V3 = os.getenv('SPEECHKIT_URL_V3', '')

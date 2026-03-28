@@ -19,6 +19,13 @@ const InputSearch = ({
     const wrapperRef = useRef(null);
     const inputRef = useRef(null);
 
+    // Сброс внутреннего поиска при внешнем сбросе value
+    useEffect(() => {
+        if (mode === 'select' && value === '') {
+            setSearch('');
+        }
+    }, [value, mode]);
+
     // Закрытие при клике вне
     useEffect(() => {
         const handleClick = (e) => {

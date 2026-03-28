@@ -32,7 +32,9 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
 class AppointmentUpdateSerializer(serializers.ModelSerializer):
     """Сериализатор для обновления записи"""
-    
+    patient_full_name = serializers.CharField(required=False, allow_blank=True)
+    patient_phone = serializers.CharField(required=False, allow_blank=True)
+
     class Meta:
         model = Appointment
         fields = [

@@ -59,10 +59,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ('email', 'full_name', 'phone_number', 'password', 'password_confirm', 'role')
-        extra_kwargs = {
-            'role': {'required': False, 'default': User.Role.PATIENT}
-        }
+        fields = ('email', 'full_name', 'phone_number', 'password', 'password_confirm')
     
     def validate(self, attrs):
         """Проверка совпадения паролей и валидация пароля"""
@@ -88,7 +85,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
             full_name=validated_data['full_name'],
             phone_number=validated_data['phone_number'],
-            role=validated_data.get('role', User.Role.PATIENT)
+            role=User.Role.PATIENT
         )
         return user
 

@@ -101,6 +101,7 @@ export const useAdminClinicBooking = (clinicId) => {
             patient_phone: patient_phone.trim(),
             service: service_id, // Backend ожидает "service", а не "service_id"
             doctor: doctor_id,   // Backend ожидает "doctor", а не "doctor_id"
+            is_urgent: bookingData.is_urgent || false,
             }
         );
 

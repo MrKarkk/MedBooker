@@ -1,11 +1,13 @@
 import json
 import time
 import logging
+import threading
 from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
+from django.db.models import Count as _Count
 from django.http import JsonResponse, StreamingHttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -15,6 +17,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken 
 
 from core.models import Clinic, Doctor, Service
 from core.utils import user_verification, patient_call_synthesis_in_memory
@@ -29,6 +32,56 @@ sse_clients = {}
 # Глобальный словарь для отслеживания статусов записей (чтобы не синтезировать повторно)
 appointment_statuses = {}
 logger = logging.getLogger(__name__)
+
+# Кэш результатов запроса очереди: clinic_key -> (list[Appointment], timestamp)
+# Позволяет N SSE-клиентам одной клиники делать 1 запрос вместо N запросов в секунду
+_queue_cache: dict = {}
+_queue_cache_lock = threading.Lock()
+_QUEUE_CACHE_TTL = 0.8  # секунды
+
+
+def _get_queue_appointments(clinic_id, today):
+    """Возвращает список записей из кэша или из БД (если кэш устарел)."""
+    cache_key = f"{clinic_id}_{today}"
+    now = time.monotonic()
+    with _queue_cache_lock:
+        entry = _queue_cache.get(cache_key)
+        if entry and (now - entry[1]) < _QUEUE_CACHE_TTL:
+            return entry[0]
+    # Запрос вне блокировки, чтобы не держать lock во время IO
+    fresh_data = list(
+        Appointment.objects.filter(clinic_id=clinic_id, date=today)
+        .select_related('doctor', 'clinic', 'service')
+        .order_by('time_start')
+    )
+    with _queue_cache_lock:
+        _queue_cache[cache_key] = (fresh_data, time.monotonic())
+    return fresh_data
+
+
+def resolve_admin_clinic(user, clinic_id=None, required_roles=None):
+    """Находит клинику, в которой пользователь является админом."""
+    if required_roles and user.role not in required_roles:
+        return None, Response(
+            {'error': 'У вас нет прав для доступа'},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
+    clinics_qs = user.clinics.all().order_by('id')
+    if clinic_id is not None:
+        clinic = clinics_qs.filter(id=clinic_id).first()
+    else:
+        # При отсутствии явного clinic_id выбираем первую доступную клинику,
+        # где включена электронная очередь, иначе просто первую связанную клинику.
+        clinic = clinics_qs.filter(is_electronic_queue=True).first() or clinics_qs.first()
+
+    if not clinic:
+        return None, Response(
+            {'error': 'Клиника не найдена или у вас нет доступа'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    return clinic, None
 
 
 @api_view(['POST'])
@@ -254,7 +307,7 @@ def update_appointment(request, appointment_id):
                 status=status.HTTP_404_NOT_FOUND
             )
         if not user.clinics.filter(id=appointment.clinic_id).exists():
-            logger.debug(f"Пользователь {user} пытается просмотреть все записи, но не является админов")
+            logger.debug(f"Пользователь {user} пытается просмотреть все записи, но не является админом")
             return Response(
                 {'error': 'У вас нет доступа к этой записи'},
                 status=status.HTTP_403_FORBIDDEN
@@ -320,44 +373,39 @@ def get_services_and_cities(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_clinic_queue_settings(request, clinic_id):
+def get_clinic_queue_settings(request, clinic_id=None):
     """Получение настроек электронной очереди клиники"""
     user = request.user
     
-    # Проверка, что пользователь - админ клиники или админ очереди
-    if user.role not in ['clinic_admin', 'clinic_queue_admin']:
-        return Response(
-            {'error': 'У вас нет прав для доступа'},
-            status=status.HTTP_403_FORBIDDEN
-        )
-    
-    # Проверка доступа к клинике
-    if not user.clinics.filter(id=clinic_id).exists():
-        return Response(
-            {'error': 'Клиника не найдена или у вас нет доступа'},
-            status=status.HTTP_404_NOT_FOUND
-        )
-    
-    try:
-        clinic = Clinic.objects.get(id=clinic_id)
-    except Clinic.DoesNotExist:
-        return Response(
-            {'error': 'Клиника не найдена'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+    clinic, error_response = resolve_admin_clinic(
+        user=user,
+        clinic_id=clinic_id,
+        required_roles=['clinic_admin', 'clinic_queue_admin'],
+    )
+    if error_response:
+        logger.warning("Пользователь %s не смог получить настройки очереди clinic_id=%s", user.id, clinic_id)
+        return error_response
     
     # Проверка, что клиника поддерживает электронную очередь
     if not clinic.is_electronic_queue:
+        logger.warning(f"Пользователь {user} пытается получить настройки очереди для клиники {clinic}, но электронная очередь не включена")
         return Response(
             {'error': 'Электронная очередь не включена для этой клиники'},
             status=status.HTTP_400_BAD_REQUEST
         )
+    else:
+        logger.debug(f"Пользователь {user} запрашивает настройки очереди для клиники {clinic}")
     
     today = datetime.now().date()
 
+    # Фильтруем врачей клиники, которые работают сегодня
+    today_weekday = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][today.weekday()]
     doctors = Doctor.objects.filter(
         clinic=clinic,
         is_active=True
+    ).filter(
+        Q(**{f'working_days__{today_weekday}': True}) & Q(**{f'working_hours__{today_weekday}__isnull': False}) |
+        Q(working_hours__isnull=True)
     )
 
     doctors_data = [{
@@ -365,7 +413,6 @@ def get_clinic_queue_settings(request, clinic_id):
         'full_name': d.full_name,
     } for d in doctors]
 
-    from django.db.models import Count as _Count
     status_counts = Appointment.objects.filter(
         clinic=clinic,
         date=today
@@ -391,41 +438,36 @@ def get_clinic_queue_settings(request, clinic_id):
         'urgent_count': status_counts['urgent'],
     }
     
-    print(f"✅ Настройки очереди отправлены для клиники {clinic_id}: {response_data}")
-    
+    logger.info(f"Пользователь {user} получил настройки очереди для клиники {clinic}: {response_data}")
     return Response(response_data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def create_queue_appointment_by_admin(request, clinic_id):
+def create_queue_appointment_by_admin(request, clinic_id=None):
     """Создание записи в электронную очередь админом клиники"""
     user = request.user
     
     # Проверка прав - только clinic_admin может создавать записи
     if user.role != 'clinic_admin':
+        logger.warning(f"Пользователь {user} пытается создать запись в электронной очереди, но не имеет прав")
         return Response(
             {'error': 'Только администратор клиники может создавать записи'},
             status=status.HTTP_403_FORBIDDEN
         )
-    
-    # Проверка доступа к клинике
-    if not user.clinics.filter(id=clinic_id).exists():
-        return Response(
-            {'error': 'Клиника не найдена или у вас нет доступа'},
-            status=status.HTTP_404_NOT_FOUND
-        )
-    
-    try:
-        clinic = Clinic.objects.get(id=clinic_id)
-    except Clinic.DoesNotExist:
-        return Response(
-            {'error': 'Клиника не найдена'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+
+    clinic, error_response = resolve_admin_clinic(
+        user=user,
+        clinic_id=clinic_id,
+        required_roles=['clinic_admin'],
+    )
+    if error_response:
+        logger.warning("Пользователь %s не смог создать запись в очереди clinic_id=%s", user.id, clinic_id)
+        return error_response
     
     # Проверка электронной очереди
     if not clinic.is_electronic_queue:
+        logger.warning(f"Пользователь {user} пытается создать запись в электронной очереди для клиники {clinic}, но электронная очередь не включена")
         return Response(
             {'error': 'У клиники нет доступа к электронной очереди'},
             status=status.HTTP_403_FORBIDDEN
@@ -436,18 +478,14 @@ def create_queue_appointment_by_admin(request, clinic_id):
     doctor_id = request.data.get('doctor')
     patient_full_name = request.data.get('patient_full_name')
     patient_phone = request.data.get('patient_phone')
-    
-    # if not patient_full_name or not patient_phone:
-    #     return Response(
-    #         {'error': 'Необходимо указать ФИО и телефон пациента'},
-    #         status=status.HTTP_400_BAD_REQUEST
-    #     )
+    is_urgent = request.data.get('is_urgent', False)
     
     # Определяем врача
     doctor = None
     service = None
     
     if clinic.is_booking_for_doctors and doctor_id:
+        logger.info(f"Клиника {clinic} поддерживает запись по врачам. Ищем врача с ID {doctor_id} для записи пациента {patient_full_name}")
         # Бронирование по врачам
         try:
             doctor = Doctor.objects.get(id=doctor_id, clinic=clinic, is_active=True)
@@ -457,6 +495,7 @@ def create_queue_appointment_by_admin(request, clinic_id):
                 status=status.HTTP_404_NOT_FOUND
             )
     elif clinic.is_booking_for_services and service_id:
+        logger.info(f"Клиника {clinic} поддерживает запись по услугам. Ищем услугу с ID {service_id} для записи пациента {patient_full_name}")
         # Бронирование по услугам
         try:
             service = Service.objects.get(id=service_id)
@@ -468,14 +507,13 @@ def create_queue_appointment_by_admin(request, clinic_id):
         
         # Выбираем врача с наименьшим количеством записей на сегодня
         today = datetime.now().date()
-        from django.db.models import Count
         
         doctor = Doctor.objects.filter(
             clinic=clinic,
             services=service,
             is_active=True
         ).annotate(
-            today_appointments=Count(
+            today_appointments=_Count(
                 'appointments',
                 filter=Q(
                     appointments__date=today,
@@ -490,6 +528,7 @@ def create_queue_appointment_by_admin(request, clinic_id):
                 status=status.HTTP_404_NOT_FOUND
             )
     else:
+        logger.warning(f"Пользователь {user} пытается создать запись в электронной очереди для клиники {clinic}, но не указал врача или услугу")
         return Response(
             {'error': 'Необходимо указать врача или услугу в зависимости от настроек клиники'},
             status=status.HTTP_400_BAD_REQUEST
@@ -506,7 +545,7 @@ def create_queue_appointment_by_admin(request, clinic_id):
     if len(name_parts) >= 1:
         initials = name_parts[0][0].upper()
     else:
-        initials = "X"
+        initials = ""
     
     # Подсчет существующих записей
     existing_count = Appointment.objects.filter(
@@ -539,10 +578,14 @@ def create_queue_appointment_by_admin(request, clinic_id):
         is_lunch_time = lunch_start <= time_start < lunch_end
     
     # Устанавливаем статус
-    if not has_active_appointments and not is_lunch_time:
+    if is_urgent:
+        appointment_status = 'urgent'
+    elif not has_active_appointments and not is_lunch_time:
         appointment_status = 'invited'
     else:
         appointment_status = 'confirmed'
+
+    logger.info(f"Пользователь {user} создал запись в электронной очереди для клиники {clinic}. Статус: {appointment_status}, Врач: {doctor.full_name}, Пациент: {patient_full_name}, Талон: {number_coupon}")
     
     # Создаем запись
     with transaction.atomic():
@@ -563,36 +606,44 @@ def create_queue_appointment_by_admin(request, clinic_id):
     serializer = AppointmentSerializer(appointment)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+
 @csrf_exempt
 @require_http_methods(["GET"])
-def queue_appointments_sse(request, clinic_id):
-    """SSE поток для получения обновлений очереди в реальном времени (электронная очередь на модели Appointment)"""
-    
-    # Получаем токен из query параметра или cookie
-    token = request.GET.get('token')
-    if not token:
-        # Пробуем получить из cookies
-        token = request.COOKIES.get('access_token')
+def queue_appointments_sse(request, clinic_id=None):
+    """SSE поток для получения обновлений очереди в реальном времени (электронная очередь на модели Appointment)"""    
+    # Получаем access token только из auth cookie
+    auth_cookie_name = settings.SIMPLE_JWT.get('AUTH_COOKIE', 'access')
+    token = request.COOKIES.get(auth_cookie_name)
     
     if not token:
+        logger.warning("SSE: запрос без токена")
         return JsonResponse({'error': 'Токен не предоставлен'}, status=401)
     
     # Проверяем токен и получаем пользователя
-    from rest_framework_simplejwt.tokens import AccessToken
     try:
         access_token = AccessToken(token)
         user_id = access_token['user_id']
         user = User.objects.get(id=user_id)
     except Exception as e:
+        logger.warning(f"SSE: недействительный токен — {e}")
         return JsonResponse({'error': 'Недействительный токен'}, status=401)
 
     # Проверка прав доступа - админы клиники и админы очереди
     if user.role not in ['clinic_admin', 'clinic_queue_admin']:
+        logger.warning(f"SSE: пользователь {user} не имеет прав для просмотра очереди")
         return JsonResponse({'error': 'У вас нет прав для просмотра записей'}, status=403)
 
-    # Проверка, что клиника принадлежит этому админу
-    if not user.clinics.filter(id=clinic_id).exists():
-        return JsonResponse({'error': 'Клиника не найдена или у вас нет доступа'}, status=404)
+    clinic, error_response = resolve_admin_clinic(
+        user=user,
+        clinic_id=clinic_id,
+        required_roles=['clinic_admin', 'clinic_queue_admin'],
+    )
+    if error_response:
+        logger.warning("SSE: пользователь %s не получил доступ к clinic_id=%s", user.id, clinic_id)
+        return JsonResponse(error_response.data, status=error_response.status_code)
+
+    clinic_id = clinic.id
+    logger.info(f"SSE: пользователь {user} подключается к очереди клиники {clinic} (ID: {clinic_id})")
 
     def event_stream():
         """Генератор событий SSE"""
@@ -609,10 +660,7 @@ def queue_appointments_sse(request, clinic_id):
             
             # Отправляем текущие данные (электронная очередь на сегодня)
             today = datetime.now().date()
-            queue_appointments = Appointment.objects.filter(
-                clinic_id=clinic_id,
-                date=today
-            ).select_related('doctor', 'clinic', 'service').order_by('time_start')
+            queue_appointments = _get_queue_appointments(clinic_id, today)
             
             # Инициализируем глобальный словарь статусов для этой клиники, если еще не создан
             clinic_key = f"clinic_{clinic_id}_{today}"
@@ -626,15 +674,12 @@ def queue_appointments_sse(request, clinic_id):
             serializer = AppointmentSerializer(queue_appointments, many=True)
             yield f"data: {json.dumps({'type': 'initial', 'appointments': serializer.data})}\n\n"
             
-            # Держим соединение открытым и отправляем обновления каждые 5 секунд
+            # Держим соединение открытым и отправляем обновления с фиксированным интервалом
             while True:
-                time.sleep(2)
-                
+                loop_started = time.monotonic()
+
                 # Отправляем актуальные данные
-                queue_appointments = Appointment.objects.filter(
-                    clinic_id=clinic_id,
-                    date=today
-                ).select_related('doctor', 'clinic', 'service').order_by('time_start')
+                queue_appointments = _get_queue_appointments(clinic_id, today)
                 
                 # Проверяем изменения статуса на "invited"
                 voice_announcements = []
@@ -644,22 +689,24 @@ def queue_appointments_sse(request, clinic_id):
                     
                     # Логируем все изменения статусов
                     if previous_status and current_status != previous_status:
-                        print(f"[STATUS_CHANGE] Клиника {clinic_id}, ID:{apt.id}, {apt.patient_full_name}: {previous_status} -> {current_status}")
+                        logger.info(f"[STATUS_CHANGE] Клиника {clinic_id}, ID:{apt.id}, {apt.patient_full_name}: {previous_status} -> {current_status}")
                     
                     # Если статус изменился на "invited" - это вызов пациента
                     if current_status == 'invited' and previous_status != 'invited':
                         # Для записей без талона передаем пустую строку (чтобы логика в utils правильно сработала)
                         coupon = apt.number_coupon or ''
-                        print(f"[VOICE_TRIGGER] Запускаем синтез для пациента: {apt.patient_full_name}, талон: {coupon or 'без талона'}")
+                        logger.info(f"[VOICE_TRIGGER] Запускаем синтез для пациента: {apt.patient_full_name}, талон: {coupon or 'без талона'}")
                         
                         cabinet_number = getattr(apt.doctor, 'cabinet_number', '') if apt.doctor else ''
-                        print(f"[VOICE_DEBUG] Параметры: patient={apt.patient_full_name}, coupon={coupon or 'нет'}, cabinet={cabinet_number or 'нет'}")
+                        logger.debug(f"[VOICE_DEBUG] Параметры: patient={apt.patient_full_name}, coupon={coupon or 'нет'}, cabinet={cabinet_number or 'нет'}")
+                        synth_started = time.monotonic()
                         
                         audio_base64 = patient_call_synthesis_in_memory(
                             patient_name=apt.patient_full_name,
                             number_coupon=coupon,
                             cabinet_number=cabinet_number
                         )
+                        synth_elapsed = time.monotonic() - synth_started
                         
                         if audio_base64:
                             voice_announcements.append({
@@ -669,9 +716,16 @@ def queue_appointments_sse(request, clinic_id):
                                 'patient_name': apt.patient_full_name,
                                 'cabinet_number': cabinet_number
                             })
-                            print(f"[CALL] ✅ Синтезировано аудио для пациента: {apt.patient_full_name}, талон: {coupon or 'без талона'}, размер base64: {len(audio_base64)} символов")
+                            logger.info(
+                                f"[CALL] Синтезировано аудио для пациента: {apt.patient_full_name}, "
+                                f"талон: {coupon or 'без талона'}, размер base64: {len(audio_base64)} символов, "
+                                f"время синтеза: {synth_elapsed:.3f}с"
+                            )
                         else:
-                            print(f"[CALL] ❌ Не удалось синтезировать аудио для {apt.patient_full_name}")
+                            logger.warning(
+                                f"[CALL] Не удалось синтезировать аудио для {apt.patient_full_name}, "
+                                f"время ожидания синтеза: {synth_elapsed:.3f}с"
+                            )
                         
                         # Обновляем статус СРАЗУ после синтеза, чтобы не повторять
                         appointment_statuses[clinic_key][apt.id] = current_status
@@ -691,7 +745,7 @@ def queue_appointments_sse(request, clinic_id):
                 # Если есть голосовые объявления, добавляем их в ответ
                 if voice_announcements:
                     response_data['voice_announcements'] = voice_announcements
-                    print(f"[SSE_SEND] 🔊 Отправляем {len(voice_announcements)} голосовых объявлений клиенту {client_id}")
+                    logger.info(f"[SSE_SEND] Отправляем {len(voice_announcements)} голосовых объявлений клиенту {client_id}")
                 
                 yield f"data: {json.dumps(response_data)}\n\n"
                 

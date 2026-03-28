@@ -24,7 +24,7 @@ export const useElectronicQueue = (clinicId, onVoiceAnnouncement) => {
     }, [onVoiceAnnouncement]);
 
     // Проверка прав доступа
-    const hasAccess = user?.role === 'clinic_admin';
+    const hasAccess = user?.role === 'clinic_admin' || user?.role === 'clinic_queue_admin';
 
     /**
      * Подключение к SSE для получения обновлений записей в реальном времени
@@ -39,25 +39,7 @@ export const useElectronicQueue = (clinicId, onVoiceAnnouncement) => {
             eventSourceRef.current.close();
         }
 
-        // Получаем SSE токен из обычного cookie (не http-only)
-        const getCookie = (name) => {
-            const nameEQ = name + '=';
-            const ca = document.cookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-            }
-            return null;
-        };
-        
-        const sseToken = getCookie('sse_token');
-        if (!sseToken) {
-            console.error('SSE token not found. Please re-login.');
-            return;
-        }
-
-        const url = `${axios.defaults.baseURL}appointment/clinic/${clinicId}/queue/sse/?token=${sseToken}`;
+        const url = `${axios.defaults.baseURL}appointment/clinic/${clinicId}/queue/sse/`;
         const eventSource = new EventSource(url);
 
         eventSource.onopen = () => {

@@ -9,8 +9,11 @@ urlpatterns = [
     path('clinic/<int:clinic_id>/', get_clinic_appointments, name='clinic_appointments'),
     
     path('clinic/<int:clinic_id>/queue-settings/', get_clinic_queue_settings, name='get_clinic_queue_settings'),
+    path('clinic/queue-settings/', get_clinic_queue_settings, name='get_clinic_queue_settings_auto'),
     path('clinic/<int:clinic_id>/queue/create/', create_queue_appointment_by_admin, name='create_queue_appointment_by_admin'),
+    path('clinic/queue/create/', create_queue_appointment_by_admin, name='create_queue_appointment_by_admin_auto'),
     path('clinic/<int:clinic_id>/queue/sse/', queue_appointments_sse, name='queue_appointments_sse'),
+    path('clinic/queue/sse/', queue_appointments_sse, name='queue_appointments_sse_auto'),
 
     path('<int:appointment_id>/update/', update_appointment, name='update_appointment'),
     path('user-appointments/', get_user_appointments, name='user_appointments'),

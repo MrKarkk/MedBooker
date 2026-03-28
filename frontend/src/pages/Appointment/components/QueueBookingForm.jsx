@@ -17,6 +17,7 @@ const QueueBookingForm = ({
         patient_phone: '',
         service_id: '',
         doctor_id: '',
+        is_urgent: false,
     });
 
     const [submitting, setSubmitting] = useState(false);
@@ -44,6 +45,7 @@ const QueueBookingForm = ({
                 patient_phone: '',
                 service_id: '',
                 doctor_id: '',
+                is_urgent: false,
             });
             
             notify.hide(loadingId);
@@ -113,6 +115,16 @@ const QueueBookingForm = ({
                                 />
                             )}
 
+                            {(isBookingForDoctors || isBookingForServices) && (
+                                <button
+                                    type="button"
+                                    className={`btn-urgent-toggle${formData.is_urgent ? ' btn-urgent-toggle--active' : ''}`}
+                                    onClick={() => setFormData(prev => ({ ...prev, is_urgent: !prev.is_urgent }))}
+                                >
+                                    ⚡ {formData.is_urgent ? 'Срочный вызов!' : 'Срочный вызов?'}
+                                </button>
+                            )}
+
                             <button 
                                 type="submit" 
                                 className="btn-search"
@@ -125,7 +137,6 @@ const QueueBookingForm = ({
                     </div>
 
                     <div className="queue-stats">
-                        <div className="queue-stats__title">Статистика на сегодня</div>
                         <div className="queue-stats__grid">
                             <div className="queue-stats__card queue-stats__card--total">
                                 <span className="queue-stats__value">{stats.total}</span>

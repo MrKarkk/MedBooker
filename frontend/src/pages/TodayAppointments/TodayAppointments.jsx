@@ -42,7 +42,7 @@ const TodayAppointments = () => {
             }
             
             // Создаем blob из binary data
-            const blob = new Blob([bytes], { type: 'audio/ogg' });
+            const blob = new Blob([bytes], { type: 'audio/ogg; codecs=opus' });
             const url = URL.createObjectURL(blob);
             
             

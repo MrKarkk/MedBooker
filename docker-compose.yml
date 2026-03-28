@@ -96,6 +96,29 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Telegram-бот (polling) — единственный экземпляр
+  telegram-bot:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medbooker_telegram_bot
+    restart: unless-stopped
+    command: python manage.py run_bot
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - medbooker_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   # React Frontend с Nginx
   frontend:
     build:

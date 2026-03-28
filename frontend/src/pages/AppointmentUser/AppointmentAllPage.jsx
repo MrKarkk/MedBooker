@@ -63,7 +63,11 @@ const AppointmentAllPage = () => {
     };
 
     const handleSaveEdit = async (appointmentId, formData) => {
-        const success = await actions.updateAppointment(appointmentId, formData);
+        // Убираем пустые строки, чтобы не перезаписывать существующие значения пустотой
+        const cleanedData = Object.fromEntries(
+            Object.entries(formData).filter(([, v]) => v !== '' && v !== null && v !== undefined)
+        );
+        const success = await actions.updateAppointment(appointmentId, cleanedData);
         if (success) {
             modals.closeEditModal();
         }

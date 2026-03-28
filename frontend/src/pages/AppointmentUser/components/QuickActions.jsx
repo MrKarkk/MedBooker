@@ -56,6 +56,18 @@ const QuickActions = ({
                     </button>
                 )}
 
+                {status === 'urgent' && (
+                    <button
+                        className="quick-action-btn invited"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onStatusChange(appointment.id, 'invited');
+                        }}
+                    >
+                        Пригласить
+                    </button>
+                )}
+
                 {['invited', 'urgent'].includes(status) && (
                     <button
                         className="quick-action-btn finish"
