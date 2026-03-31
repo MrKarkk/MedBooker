@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import logger from '../../services/logger';
 import './Login.css';
 
 
@@ -17,6 +18,11 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
+
+    // Лог открытия страницы
+    useEffect(() => {
+        logger.info('Страница входа открыта (гость)');
+    }, []);
 
     // Перенаправление на главную, если пользователь уже авторизован
     useEffect(() => {
@@ -71,10 +77,11 @@ const Login = () => {
             
             setIsLoading(false);
             
-            if (result.success) {                // Используем navigate вместо window.location для плавного перехода
-                // isAuthenticated обновится автоматически, и useEffect выполнит навигацию
+            if (result.success) {
+                logger.info('Успешный вход в систему', { email: formData.email });
                 navigate('/', { replace: true });
             } else {
+                logger.warning('Ошибка входа в систему', { email: formData.email, error: result.error });
                 setErrors({ general: result.error });
             }
         }

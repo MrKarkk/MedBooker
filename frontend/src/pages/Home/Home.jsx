@@ -1,8 +1,21 @@
+import { useEffect } from 'react';
 import ButtonAppointment from '../../components/Common/ButtonAppointment';
+import { useAuth } from '../../contexts/AuthContext';
+import logger from '../../services/logger';
 import './Home.css';
 
 
 const Home = () => {
+    const { isAuthenticated, user } = useAuth();
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            logger.info('Главная страница открыта', { user: user?.email });
+        } else {
+            logger.info('Главная страница открыта (гость)');
+        }
+    }, [isAuthenticated, user]);
+
     return (
         <>
             <section className="home-page-section">

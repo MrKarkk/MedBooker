@@ -85,3 +85,44 @@ def received_message(request):
         return Response({'message': 'Сообщение успешно отправлено'}, status=status.HTTP_201_CREATED)
     logger.warning(f"Ошибка валидации сообщения: {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+FRONTEND_LOG_LEVELS = {'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'}
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def frontend_log(request):
+    """Приём лога с фронтенда и запись в react.log.
+
+    Ожидаемое тело запроса (JSON):
+    {
+        "level":   "INFO",             # уровень лога
+        "message": "Текст сообщения",  # текст
+        "page":    "/appointment/",    # текущий URL страницы
+        "extra":   {}                  # произвольные дополнительные данные (необязательно)
+    }
+    """
+    frontend_logger = logging.getLogger('frontend')
+
+    level   = str(request.data.get('level',   'INFO')).upper()
+    message = str(request.data.get('message', '')).strip()
+    page    = str(request.data.get('page',    '—')).strip()
+    extra   = request.data.get('extra', {})
+
+    if level not in FRONTEND_LOG_LEVELS:
+        level = 'INFO'
+
+    if not message:
+        return Response({'error': 'message обязателен'}, status=status.HTTP_400_BAD_REQUEST)
+
+    user = request.user
+    user_label = f"{user.email} (id={user.pk})" if user and user.is_authenticated else 'гость'
+
+    log_line = f"[REACT] [{page}] [{user_label}] {message}"
+    if extra:
+        log_line += f" | extra={extra}"
+
+    log_func = getattr(frontend_logger, level.lower(), frontend_logger.info)
+    log_func(log_line)
+
+    return Response({'ok': True}, status=status.HTTP_200_OK)

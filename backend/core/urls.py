@@ -12,4 +12,5 @@ urlpatterns = [
 
     path('faq/', get_faq_entries, name='get_faq_entries'),
     path('contact/', received_message, name='received_message'),
+    path('log/', frontend_log, name='frontend_log'),
 ]

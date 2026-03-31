@@ -5,6 +5,7 @@ import './TodayAppointments.css';
 import Forbidden403 from '../../components/SiteCods/Forbidden403';
 import Unauthorized401 from '../../components/SiteCods/Unauthorized401';
 import { useElectronicQueue } from './hooks/useElectronicQueue';
+import logger from '../../services/logger';
 
 
 const TodayAppointments = () => {
@@ -18,6 +19,7 @@ const TodayAppointments = () => {
     // Функция включения аудио (требуется взаимодействие пользователя)
     const enableAudio = () => {
         setAudioEnabled(true);
+        logger.info('Пользователь включил звук на экране очереди');
         // Создаем тихое аудио и воспроизводим для активации автовоспроизведения
         const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
         silentAudio.play().then(() => {
@@ -136,6 +138,14 @@ const TodayAppointments = () => {
         }, 1000);
 
         return () => clearInterval(timer);
+    }, []);
+
+    // Лог открытия страницы очереди
+    useEffect(() => {
+        if (user) {
+            logger.info('Экран электронной очереди открыт', { clinic_id: clinicId, user: user?.email });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Очистка аудио ресурсов при размонтировании

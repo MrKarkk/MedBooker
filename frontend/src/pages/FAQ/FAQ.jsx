@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import core from '../../services/core';
+import logger from '../../services/logger';
 import './FAQ.css';
 
 const FAQ = () => {
@@ -7,9 +8,15 @@ const FAQ = () => {
     const [faqData, setFaqData] = useState([]);
 
     useEffect(() => {
+        logger.info('Страница FAQ открыта');
         const fetchFAQ = async () => {
-            const data = await core.getFAQEntries();
-            setFaqData(data);
+            try {
+                const data = await core.getFAQEntries();
+                setFaqData(data);
+                logger.info('FAQ загружены', { count: data.length });
+            } catch (err) {
+                logger.error('Ошибка загрузки FAQ', { error: err?.message });
+            }
         };
 
         fetchFAQ();

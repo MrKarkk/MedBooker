@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TelGif from '../../assets/gif/Contact us.gif'
 import EmailGif from '../../assets/gif/contact-email.gif' 
 import ClockGif from '../../assets/gif/Waiting.gif'
 import coreAPI from '../../services/core';
 import { useNotification } from '../../components/Notification/useNotification';
 import NotificationContainer from '../../components/Notification/NotificationContainer';
+import logger from '../../services/logger';
 import './Contacts.css';
 
 
@@ -17,6 +18,10 @@ const Contacts = () => {
 
     const [errors, setErrors] = useState({});
     const { notifications, success, error, loading, hide, removeNotification } = useNotification();
+
+    useEffect(() => {
+        logger.info('Страница контактов открыта');
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -69,10 +74,12 @@ const Contacts = () => {
             });
 
             hide(loadingId);
+            logger.info('Сообщение с контактной формы отправлено', { email: formData.email });
             success('Спасибо! Ваше сообщение успешно отправлено.');
             setFormData({ fullName: '', email: '', message: '' });
         } catch (err) {
             hide(loadingId);
+            logger.error('Ошибка отправки сообщения с контактной формы', { email: formData.email, error: err?.message });
             error(err?.response?.data?.error || 'Ошибка отправки сообщения');
         }
     };

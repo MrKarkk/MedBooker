@@ -176,7 +176,7 @@ const Navbar = () => {
                                     </li>
                                     {user?.role === 'clinic_admin' || user?.role === 'clinic_queue_admin' ? (
                                         <li>
-                                            <Link to="/today-appointments" onClick={closeUserMenu}>
+                                            <Link to="/today-appointments" target="_blank" rel="noopener noreferrer" onClick={closeUserMenu}>
                                                 <span className="menu-icon">🪟</span>
                                                 <span>Окно очередей</span>
                                             </Link>

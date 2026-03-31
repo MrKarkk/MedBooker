@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../components/Notification/useNotification';
+import logger from '../../services/logger';
 import NotificationContainer from '../../components/Notification/NotificationContainer';
 import Forbidden403 from '../../components/SiteCods/Forbidden403';
 
@@ -31,6 +33,10 @@ const AppointmentPage = () => {
         onSuccess: search.search // Перезагружаем результаты поиска после записи
     });
     
+    useEffect(() => {
+        logger.info('Страница записи открыта', { role: user?.role ?? 'гость' });
+    }, [user?.role]);
+
     // Хук для электронной очереди
     const clinicId = user?.clinics?.[0]?.id;
     const queue = useAdminClinicBooking(clinicId);

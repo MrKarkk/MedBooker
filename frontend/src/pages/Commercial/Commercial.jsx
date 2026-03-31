@@ -1,11 +1,18 @@
+import { useEffect } from 'react';
 import './Commercial.css';
 import { API_BASE_URL } from '../../config';
+import logger from '../../services/logger';
 
 
 const Commercial = () => {
 
+    useEffect(() => {
+        logger.info('Страница коммерческого предложения открыта');
+    }, []);
+
     const handleDocument = (version) => {
         const url = `${API_BASE_URL}/core/document/commercial/${version}/`;
+        logger.info('Скачивание коммерческого предложения', { version });
         window.open(url, '_blank');
     };
 

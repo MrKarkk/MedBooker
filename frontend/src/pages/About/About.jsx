@@ -1,9 +1,15 @@
+import { useEffect } from 'react';
 import ButtonAppointment from '../../components/Common/ButtonAppointment.jsx';
 import './About.css';
-import MissionsGif from '../../assets/gif/Target.gif'
+import MissionsGif from '../../assets/gif/Target.gif';
+import logger from '../../services/logger';
 
 
 const About = () => {
+    useEffect(() => {
+        logger.info('Страница «О нас» открыта');
+    }, []);
+
     return (
         <div className="about-page">
             <section className="about-page-section">

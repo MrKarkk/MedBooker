@@ -2,6 +2,7 @@ import json
 import time
 import logging
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 
 from django.conf import settings
@@ -20,7 +21,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken 
 
 from core.models import Clinic, Doctor, Service
-from core.utils import user_verification, patient_call_synthesis_in_memory
+from core.utils import patient_call_synthesis_in_memory
 from users.models import User
 
 from .availability import get_available_slots, is_slot_available
@@ -38,6 +39,9 @@ logger = logging.getLogger(__name__)
 _queue_cache: dict = {}
 _queue_cache_lock = threading.Lock()
 _QUEUE_CACHE_TTL = 0.8  # секунды
+
+# Пул потоков для неблокирующего синтеза речи (SpeechKit API)
+_synth_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix='speech_synth')
 
 
 def _get_queue_appointments(clinic_id, today):
@@ -240,12 +244,24 @@ def get_user_appointments(request):
     user = request.user
     
     if user.role == 'doctor':
+        # Находим врача по tg_id или phone_number для надёжной связи (не по имени)
+        doctor = Doctor.objects.filter(
+            Q(tg_id=user.tg_id, tg_id__isnull=False) |
+            Q(phone_number=user.phone_number)
+        ).first()
+
+        if not doctor:
+            return Response(
+                {'error': 'Профиль врача не найден. Обратитесь к администратору.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
         appointments = Appointment.objects.filter(
-            doctor__full_name=user.full_name
+            doctor=doctor
         ).select_related('doctor', 'clinic', 'service').order_by('-date', '-time_start')
 
         serializer = AppointmentSerializer(appointments, many=True)
-        logger.debug(f"Успешнаю отправка записи пользователя: {user}")
+        logger.debug(f"Успешная отправка записей врача: {user}")
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         logger.debug(f"Пользователь {user} пытается просмотреть записи, но не является врачом")
@@ -314,9 +330,18 @@ def update_appointment(request, appointment_id):
             )
         allowed_fields = None  # Админ может менять любые поля
     elif user.role == 'doctor':
-        # Врач может менять только свои записи
+        # Врач может менять только свои записи — ищем привязанного врача по tg_id/phone
+        doctor = Doctor.objects.filter(
+            Q(tg_id=user.tg_id, tg_id__isnull=False) |
+            Q(phone_number=user.phone_number)
+        ).first()
+        if not doctor:
+            return Response(
+                {'error': 'Профиль врача не найден'},
+                status=status.HTTP_404_NOT_FOUND
+            )
         try:
-            appointment = Appointment.objects.get(id=appointment_id, doctor__full_name=user.full_name)
+            appointment = Appointment.objects.get(id=appointment_id, doctor=doctor)
         except Appointment.DoesNotExist:
             logger.debug(f"Запись {appointment_id} не найдена или врач не имеет доступа")
             return Response(
@@ -324,7 +349,6 @@ def update_appointment(request, appointment_id):
                 status=status.HTTP_404_NOT_FOUND
             )
         allowed_fields = ['status', 'comment']  # Врач может менять только статус и комментарий
-        # Оставим возможность расширить список разрешённых полей
     else:
         logger.debug(f"Пользователь {user} пытается изменить запись {appointment_id}, но не имеет прав")
         return Response(
@@ -653,6 +677,10 @@ def queue_appointments_sse(request, clinic_id=None):
         if clinic_id not in sse_clients:
             sse_clients[clinic_id] = []
         sse_clients[clinic_id].append(client_id)
+
+        # Локальный словарь ожидающих фьючерсов синтеза речи
+        # {appointment_id: {'future': Future, 'coupon': str, ...}}
+        pending_synth = {}
         
         try:
             # Отправляем начальное подключение
@@ -681,8 +709,43 @@ def queue_appointments_sse(request, clinic_id=None):
                 # Отправляем актуальные данные
                 queue_appointments = _get_queue_appointments(clinic_id, today)
                 
-                # Проверяем изменения статуса на "invited"
+                # --- Собираем готовые результаты синтеза речи (неблокирующе) ---
                 voice_announcements = []
+                completed_ids = []
+                for apt_id, synth_info in pending_synth.items():
+                    future = synth_info['future']
+                    if future.done():
+                        completed_ids.append(apt_id)
+                        try:
+                            audio_base64 = future.result()
+                            synth_elapsed = time.monotonic() - synth_info['submitted_at']
+                            if audio_base64:
+                                voice_announcements.append({
+                                    'appointment_id': apt_id,
+                                    'audio_base64': audio_base64,
+                                    'number_coupon': synth_info['coupon'] or (
+                                        synth_info['time_start'].strftime("%H:%M") if synth_info['time_start'] else ''
+                                    ),
+                                    'patient_name': synth_info['patient_name'],
+                                    'cabinet_number': synth_info['cabinet_number'],
+                                })
+                                logger.info(
+                                    f"[CALL] Синтезировано аудио для пациента: {synth_info['patient_name']}, "
+                                    f"талон: {synth_info['coupon'] or 'без талона'}, "
+                                    f"размер base64: {len(audio_base64)} символов, "
+                                    f"время синтеза: {synth_elapsed:.3f}с"
+                                )
+                            else:
+                                logger.warning(
+                                    f"[CALL] Не удалось синтезировать аудио для {synth_info['patient_name']}, "
+                                    f"время ожидания синтеза: {synth_elapsed:.3f}с"
+                                )
+                        except Exception as exc:
+                            logger.error(f"[CALL] Ошибка синтеза для appointment {apt_id}: {exc}")
+                for apt_id in completed_ids:
+                    del pending_synth[apt_id]
+
+                # --- Проверяем изменения статусов и отправляем новые задачи синтеза ---
                 for apt in queue_appointments:
                     current_status = apt.status
                     previous_status = appointment_statuses[clinic_key].get(apt.id)
@@ -691,49 +754,31 @@ def queue_appointments_sse(request, clinic_id=None):
                     if previous_status and current_status != previous_status:
                         logger.info(f"[STATUS_CHANGE] Клиника {clinic_id}, ID:{apt.id}, {apt.patient_full_name}: {previous_status} -> {current_status}")
                     
-                    # Если статус изменился на "invited" - это вызов пациента
+                    # Если статус изменился на "invited" - отправляем синтез в фоновый поток
                     if current_status == 'invited' and previous_status != 'invited':
-                        # Для записей без талона передаем пустую строку (чтобы логика в utils правильно сработала)
-                        coupon = apt.number_coupon or ''
-                        logger.info(f"[VOICE_TRIGGER] Запускаем синтез для пациента: {apt.patient_full_name}, талон: {coupon or 'без талона'}")
-                        
-                        cabinet_number = getattr(apt.doctor, 'cabinet_number', '') if apt.doctor else ''
-                        logger.debug(f"[VOICE_DEBUG] Параметры: patient={apt.patient_full_name}, coupon={coupon or 'нет'}, cabinet={cabinet_number or 'нет'}")
-                        synth_started = time.monotonic()
-                        
-                        audio_base64 = patient_call_synthesis_in_memory(
-                            patient_name=apt.patient_full_name,
-                            number_coupon=coupon,
-                            cabinet_number=cabinet_number
-                        )
-                        synth_elapsed = time.monotonic() - synth_started
-                        
-                        if audio_base64:
-                            voice_announcements.append({
-                                'appointment_id': apt.id,
-                                'audio_base64': audio_base64,
-                                'number_coupon': coupon or apt.time_start.strftime("%H:%M") if apt.time_start else '',
+                        if apt.id not in pending_synth:  # не отправлять повторно
+                            coupon = apt.number_coupon or ''
+                            cabinet_number = getattr(apt.doctor, 'cabinet_number', '') if apt.doctor else ''
+                            logger.info(f"[VOICE_TRIGGER] Запускаем синтез (async) для пациента: {apt.patient_full_name}, талон: {coupon or 'без талона'}")
+                            logger.debug(f"[VOICE_DEBUG] Параметры: patient={apt.patient_full_name}, coupon={coupon or 'нет'}, cabinet={cabinet_number or 'нет'}")
+
+                            future = _synth_executor.submit(
+                                patient_call_synthesis_in_memory,
+                                patient_name=apt.patient_full_name,
+                                number_coupon=coupon,
+                                cabinet_number=cabinet_number,
+                            )
+                            pending_synth[apt.id] = {
+                                'future': future,
+                                'coupon': coupon,
                                 'patient_name': apt.patient_full_name,
-                                'cabinet_number': cabinet_number
-                            })
-                            logger.info(
-                                f"[CALL] Синтезировано аудио для пациента: {apt.patient_full_name}, "
-                                f"талон: {coupon or 'без талона'}, размер base64: {len(audio_base64)} символов, "
-                                f"время синтеза: {synth_elapsed:.3f}с"
-                            )
-                        else:
-                            logger.warning(
-                                f"[CALL] Не удалось синтезировать аудио для {apt.patient_full_name}, "
-                                f"время ожидания синтеза: {synth_elapsed:.3f}с"
-                            )
-                        
-                        # Обновляем статус СРАЗУ после синтеза, чтобы не повторять
-                        appointment_statuses[clinic_key][apt.id] = current_status
-                    elif previous_status is None:
-                        # Новая запись, инициализируем статус
-                        appointment_statuses[clinic_key][apt.id] = current_status
-                    elif current_status != previous_status:
-                        # Другое изменение статуса (не на invited)
+                                'cabinet_number': cabinet_number,
+                                'time_start': apt.time_start,
+                                'submitted_at': time.monotonic(),
+                            }
+
+                    # Обновляем статус в глобальном словаре
+                    if previous_status is None or current_status != previous_status:
                         appointment_statuses[clinic_key][apt.id] = current_status
                 
                 serializer = AppointmentSerializer(queue_appointments, many=True)
@@ -748,9 +793,17 @@ def queue_appointments_sse(request, clinic_id=None):
                     logger.info(f"[SSE_SEND] Отправляем {len(voice_announcements)} голосовых объявлений клиенту {client_id}")
                 
                 yield f"data: {json.dumps(response_data)}\n\n"
+
+                # Ждём до следующего тика (1 секунда), чтобы не нагружать CPU
+                elapsed = time.monotonic() - loop_started
+                sleep_time = max(0, 1.0 - elapsed)
+                time.sleep(sleep_time)
                 
         except GeneratorExit:
-            # Клиент отключился
+            # Клиент отключился — отменяем незавершённые задачи синтеза
+            for synth_info in pending_synth.values():
+                synth_info['future'].cancel()
+            pending_synth.clear()
             if clinic_id in sse_clients and client_id in sse_clients[clinic_id]:
                 sse_clients[clinic_id].remove(client_id)
                 if not sse_clients[clinic_id]:

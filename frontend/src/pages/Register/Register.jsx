@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotification } from '../../components/Notification/useNotification';
 import { API_BASE_URL } from '../../config';
+import logger from '../../services/logger';
 import './Register.css';
 
 
@@ -24,6 +25,11 @@ const Register = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Лог открытия страницы
+    useEffect(() => {
+        logger.info('Страница регистрации открыта (гость)');
+    }, []);
 
     // Перенаправление на главную, если пользователь уже авторизован
     useEffect(() => {
@@ -100,9 +106,11 @@ const Register = () => {
             setIsLoading(false);
             
             if (result.success) {
+                logger.info('Успешная регистрация', { email: formData.email });
                 success('Регистрация успешна! Добро пожаловать в MedBooker!');
                 setTimeout(() => navigate('/', { replace: true }), 1500);
             } else {
+                logger.warning('Ошибка регистрации', { email: formData.email, error: result.error });
                 // Обработка ошибок с сервера
                 if (result.errors) {
                     const serverErrors = {};

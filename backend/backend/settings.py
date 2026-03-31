@@ -275,6 +275,16 @@ LOGGING = {
             'formatter': 'verbose',
             'encoding': 'utf-8',
         },
+        'frontend_file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(BASE_DIR / 'logs' / 'react.log'),
+            'maxBytes': 10 * 1024 * 1024,       # 10 МБ
+            'backupCount': 5,                   # 5 файлов по 10 МБ
+            'mode': 'a',
+            'formatter': 'verbose',
+            'encoding': 'utf-8',
+        },
     },
     'loggers': {
         'django': {
@@ -290,6 +300,7 @@ LOGGING = {
         'core': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
         'appointment': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
         'users': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
+        'frontend': {'handlers': ['console', 'frontend_file'], 'level': 'DEBUG', 'propagate': False},
     },
 }
 

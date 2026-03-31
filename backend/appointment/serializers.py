@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Appointment, AppointmentQueueOnly
+from .models import Appointment
 from core.models import Doctor, Service
 
 
@@ -107,67 +107,3 @@ class AppointmentCreateSerializer(serializers.ModelSerializer):
         return attrs
 
 
-class DoctorAvailabilitySerializer(serializers.ModelSerializer):
-    """Сериализатор для доктора с доступными слотами"""
-    clinic_name = serializers.CharField(source='clinic.name', read_only=True)
-    clinic_address = serializers.CharField(source='clinic.address', read_only=True)
-    clinic_phone = serializers.CharField(source='clinic.phone_number', read_only=True)
-    photo = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Doctor
-        fields = [
-            'id', 'full_name', 'specialty', 'photo',
-            'clinic', 'clinic_name', 'clinic_address', 'clinic_phone',
-            'rating', 'price', 'default_duration',
-            'working_hours', 'working_days', 'lunch_time'
-        ]
-    
-    def get_photo(self, obj):
-        if obj.photo:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(obj.photo.url)
-        return None
-
-class AppointmentQueueOnlyCreateSerializer(serializers.ModelSerializer):
-    """Сериализатор для создания записи в онлайн-очередь"""
-    service_name = serializers.CharField(source='service.name', read_only=True)
-    status = serializers.ChoiceField(choices=AppointmentQueueOnly.StatusQueueOnly.choices, required=False)
-
-    class Meta:
-        model = AppointmentQueueOnly
-        fields = [
-            'id',
-            'patient_full_name', 'patient_phone',
-            'clinic', 'doctor', 'service', 'service_name',
-            'date', 'time_start',
-            'number_coupon',
-            'status',
-            'comment',
-            'created_at', 'updated_at',
-        ]
-        # allow status to be set from client; other fields remain read-only
-        read_only_fields = ('id', 'number_coupon', 'date', 'time_start', 'created_at', 'updated_at')
-
-
-class AppointmentQueueOnlySerializer(serializers.ModelSerializer):
-    """Сериализатор для отображения записей очереди"""
-    doctor_name = serializers.CharField(source='doctor.full_name', read_only=True)
-    doctor_cabinet = serializers.CharField(source='doctor.cabinet_number', read_only=True)
-    service_name = serializers.CharField(source='service.name', read_only=True)
-
-    class Meta:
-        model = AppointmentQueueOnly
-        fields = [
-            'id',
-            'patient_full_name', 'patient_phone',
-            'doctor', 'doctor_name', 'doctor_cabinet',
-            'service', 'service_name',
-            'date', 'time_start',
-            'number_coupon',
-            'status',
-            'comment',
-            'created_at', 'updated_at',
-        ]
-        read_only_fields = ('id', 'created_at', 'updated_at')

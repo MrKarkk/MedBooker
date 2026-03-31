@@ -257,7 +257,8 @@ def _generate_slots(
             lunch_start_minutes = _time_to_minutes(lunch_start)
             lunch_end_minutes = _time_to_minutes(lunch_end)
             if current_minutes < lunch_end_minutes and lunch_start_minutes < slot_end_minutes:
-                current_minutes += duration_minutes
+                # Перепрыгиваем на конец обеда, а не на один шаг
+                current_minutes = lunch_end_minutes
                 continue
         
         # Проверяем, не занят ли слот
