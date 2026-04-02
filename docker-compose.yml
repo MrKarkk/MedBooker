@@ -7,21 +7,21 @@ services:
     command: 
       - "postgres"
       - "-c"
-      - "shared_buffers=256MB"
+      - "shared_buffers=128MB"
       - "-c"
-      - "effective_cache_size=768MB"
+      - "effective_cache_size=384MB"
       - "-c"
-      - "work_mem=4MB"
+      - "work_mem=2MB"
       - "-c"
-      - "maintenance_work_mem=64MB"
+      - "maintenance_work_mem=32MB"
       - "-c"
-      - "max_connections=100"
+      - "max_connections=50"
       - "-c"
-      - "wal_buffers=8MB"
+      - "wal_buffers=4MB"
       - "-c"
-      - "min_wal_size=256MB"
+      - "min_wal_size=128MB"
       - "-c"
-      - "max_wal_size=1GB"
+      - "max_wal_size=512MB"
       - "-c"
       - "checkpoint_completion_target=0.9"
       - "-c"
@@ -53,6 +53,13 @@ services:
       - ./backups:/backups
     networks:
       - medbooker_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          memory: 256M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -85,6 +92,13 @@ services:
         condition: service_healthy
     networks:
       - medbooker_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.75'
+          memory: 512M
+        reservations:
+          memory: 256M
     healthcheck:
       test: ["CMD-SHELL", "exit 0"]
       interval: 10s
@@ -108,6 +122,13 @@ services:
       - ./backend/.env
     volumes:
       - ./backend/logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          memory: 128M
     depends_on:
       postgres:
         condition: service_healthy
@@ -128,6 +149,13 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+        reservations:
+          memory: 64M
     depends_on:
       backend:
         condition: service_healthy

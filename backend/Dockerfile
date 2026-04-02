@@ -83,7 +83,7 @@ ENTRYPOINT ["/entrypoint.sh"]
 # Запускаем через gunicorn с оптимизированными параметрами
 CMD ["gunicorn", \
     "--bind", "0.0.0.0:8000", \
-    "--workers", "4", \
+    "--workers", "2", \
     "--worker-class", "gthread", \
     "--threads", "2", \
     "--timeout", "120", \
