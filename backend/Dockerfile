@@ -53,6 +53,7 @@ RUN apk add --no-cache \
     libpq \
     libjpeg \
     wget \
+    su-exec \
     && addgroup -g 1000 django \
     && adduser -D -u 1000 -G django django
 
@@ -70,11 +71,14 @@ RUN mkdir -p /app/staticfiles /app/media /app/logs && \
     chown -R django:django /app/staticfiles /app/media /app/logs && \
     chmod -R 755 /app/staticfiles /app/media /app/logs
 
-# Переключаемся на непривилегированного пользователя
-USER django
+# Копируем entrypoint
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 # Открываем порт
 EXPOSE 8000
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Запускаем через gunicorn с оптимизированными параметрами
 CMD ["gunicorn", \

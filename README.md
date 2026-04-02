@@ -91,27 +91,25 @@ cp bot/.env.example bot/.env
 docker-compose up -d
 ```
 
-5. Выполните миграции базы данных:
+5. Создайте базу данных PostgreSQL:
+```bash
+docker exec -it medbooker_postgres psql -U medbooker_admin_2026 -c "CREATE DATABASE medbooker_db;"
+```
+
+6. Выполните миграции базы данных:
 ```bash
 docker exec -it medbooker_backend python manage.py migrate
 ```
 
-6. Создайте суперпользователя:
+7. Создайте суперпользователя:
 ```bash
 docker exec -it medbooker_backend python manage.py createsuperuser
 ```
 
-7. Откройте в браузере:
+8. Откройте в браузере:
    - Фронтенд: http://localhost
    - API: http://localhost:8000/api/
    - Админ-панель: http://localhost:8000/admin/
-
-### Режим разработки
-
-Для запуска в режиме разработки используйте:
-```bash
-docker-compose -f docker-compose.dev.yml up
-```
 
 ## Подключение клиники
 

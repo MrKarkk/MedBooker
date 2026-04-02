@@ -55,4 +55,3 @@ coverage.xml
 migrations/
 services/
 */migrations/
-management/
