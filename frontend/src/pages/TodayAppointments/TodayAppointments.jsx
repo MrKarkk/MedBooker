@@ -305,6 +305,13 @@ const TodayAppointments = () => {
                     <div className="queue-grid">
                         {appointments
                             .filter(apt => !['missed', 'canceled', 'finished'].includes(apt.status?.toLowerCase()))
+                            .slice()
+                            .sort((a, b) => {
+                                const order = { invited: 0, urgent: 1, pending: 2, confirmed: 3 };
+                                const aOrder = order[a.status?.toLowerCase()] ?? 99;
+                                const bOrder = order[b.status?.toLowerCase()] ?? 99;
+                                return aOrder - bOrder;
+                            })
                             .map((appointment) => (
                             <div key={appointment.id} className="queue-card">
                                 {/* Цветная полоса статуса */}
