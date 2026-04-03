@@ -13,3 +13,5 @@ APScheduler==3.10.4
 django-redis==5.4.0
 redis==5.0.1
 sentry-sdk==1.40.0
+celery==5.3.6
+django-celery-beat==2.6.0

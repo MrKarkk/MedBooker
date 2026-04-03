@@ -167,6 +167,104 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  # Redis — брокер и бэкенд для Celery
+  redis:
+    image: redis:7-alpine
+    container_name: medbooker_redis
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no --maxmemory 64mb --maxmemory-policy allkeys-lru
+    networks:
+      - medbooker_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 96M
+        reservations:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # Celery Worker — выполняет задачи из очереди backup
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medbooker_celery_worker
+    restart: unless-stopped
+    command: >
+      celery -A backend worker
+      --queues=backup
+      --concurrency=1
+      --loglevel=info
+      --max-tasks-per-child=10
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backups:/app/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - medbooker_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 192M
+        reservations:
+          memory: 96M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Celery Beat — планировщик (запускает задачи по расписанию)
+  celery-beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: medbooker_celery_beat
+    restart: unless-stopped
+    command: >
+      celery -A backend beat
+      --scheduler django_celery_beat.schedulers:DatabaseScheduler
+      --loglevel=info
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backups:/app/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - medbooker_network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 128M
+        reservations:
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
 volumes:
   postgres_data:
     driver: local

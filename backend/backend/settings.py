@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'django_celery_beat',
     'core',
     'users',
     'appointment',
@@ -239,6 +240,19 @@ CACHES = {
 if os.getenv('USE_REDIS', 'False') == 'True':
     SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
     SESSION_CACHE_ALIAS = 'default'
+
+# Celery
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/1'
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/2'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Tashkent'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+# Отдельная очередь для бэкапа — не мешает основным задачам
+CELERY_TASK_ROUTES = {
+    'core.tasks.backup_database': {'queue': 'backup'},
+}
 
 
 LOGGING = {

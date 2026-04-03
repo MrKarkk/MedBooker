@@ -51,6 +51,7 @@ ENV PYTHONUNBUFFERED=1 \
 RUN apk add --no-cache \
     postgresql-libs \
     libpq \
+    postgresql-client \
     libjpeg \
     wget \
     su-exec \

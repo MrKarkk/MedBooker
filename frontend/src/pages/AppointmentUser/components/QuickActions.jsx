@@ -44,18 +44,6 @@ const QuickActions = ({
                     </button>
                 )}
 
-                {status === 'confirmed' && (
-                    <button
-                        className="quick-action-btn urgent"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onStatusChange(appointment.id, 'urgent');
-                        }}
-                    >
-                        Срочный
-                    </button>
-                )}
-
                 {status === 'urgent' && (
                     <button
                         className="quick-action-btn invited"
