@@ -579,7 +579,7 @@ def create_queue_appointment_by_admin(request, clinic_id=None):
     ).count()
     
     seq = existing_count + 1
-    number_coupon = f"{initials}{seq:02d}"
+    number_coupon = f"{initials}{seq:2d}"
     
     # Определение статуса
     # Проверяем есть ли записи со статусом invited или pending

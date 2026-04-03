@@ -133,7 +133,7 @@ def patient_call_synthesis_in_memory(patient_name, number_coupon, cabinet_number
             "hints": [
                 { "voice": "lera" },
                 { "role": "neutral" },
-                { "speed": 0.8 }
+                { "speed": 0.9 }
             ]
         }
 

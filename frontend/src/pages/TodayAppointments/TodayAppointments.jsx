@@ -47,7 +47,6 @@ const TodayAppointments = () => {
             const blob = new Blob([bytes], { type: 'audio/ogg; codecs=opus' });
             const url = URL.createObjectURL(blob);
             
-            
             // Останавливаем предыдущее аудио если играет
             if (audioRef.current) {
                 audioRef.current.pause();
@@ -130,6 +129,7 @@ const TodayAppointments = () => {
         hasAccess,
         isElectronicQueue
     } = useElectronicQueue(clinicId, handleVoiceAnnouncement);
+    console.log('Сегодняшние записи:', appointments);
 
     // Обновление времени каждую секунду
     useEffect(() => {
