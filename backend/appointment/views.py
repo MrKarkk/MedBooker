@@ -27,12 +27,12 @@ from users.models import User
 from .availability import get_available_slots, is_slot_available
 from .models import Appointment
 from .serializers import *
+from core.models import Service
 
 
 sse_clients = {}
 # Глобальный словарь для отслеживания статусов записей (чтобы не синтезировать повторно)
 appointment_statuses = {}
-logger = logging.getLogger(__name__)
 
 # Кэш результатов запроса очереди: clinic_key -> (list[Appointment], timestamp)
 # Позволяет N SSE-клиентам одной клиники делать 1 запрос вместо N запросов в секунду
@@ -74,10 +74,6 @@ def resolve_admin_clinic(user, clinic_id=None, required_roles=None):
     clinics_qs = user.clinics.all().order_by('id')
     if clinic_id is not None:
         clinic = clinics_qs.filter(id=clinic_id).first()
-    else:
-        # При отсутствии явного clinic_id выбираем первую доступную клинику,
-        # где включена электронная очередь, иначе просто первую связанную клинику.
-        clinic = clinics_qs.filter(is_electronic_queue=True).first() or clinics_qs.first()
 
     if not clinic:
         return None, Response(
@@ -100,7 +96,6 @@ def search_available_doctors(request):
     search_date_str = request.data.get('date')
     
     if not all([service_id, city, search_date_str]):
-        logger.debug(f"Неполные данные для поиска врачей: {request.data}")
         return Response(
             {'error': 'Необходимо указать услугу, город и дату'},
             status=status.HTTP_400_BAD_REQUEST
@@ -109,24 +104,20 @@ def search_available_doctors(request):
     try:
         search_date = datetime.strptime(search_date_str, '%Y-%m-%d').date()
     except ValueError:
-        logger.debug(f"Неверный формат даты: {search_date_str}")
         return Response(
             {'error': 'Неверный формат даты. Используйте YYYY-MM-DD'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
     try:
-        from core.models import Service
         service = Service.objects.get(id=service_id)
-        logger.debug(f"Найдена услуга для поиска: {service.name} (ID: {service_id})")
     except Service.DoesNotExist:
-        logger.debug(f"Услуга {service_id} не найдена")
         return Response(
             {'error': 'Услуга не найдена'},
             status=status.HTTP_404_NOT_FOUND
         )
     
-    # Находим всех врачей, которые предоставляют эту услугу в указанном городе
+    # TODO изменить способ находить врача по услугу, городу и статусу клиники, чтобы не делать лишних запросов к БД в цикле (для каждого врача)
     doctors = Doctor.objects.filter(
         services__id=service_id,
         clinic__city=city,

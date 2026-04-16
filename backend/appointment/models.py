@@ -1,5 +1,5 @@
 from django.db import models
-from core.models import Clinic, Doctor, Service
+from core.models import Doctor
 
 
 class Appointment(models.Model):
@@ -15,27 +15,13 @@ class Appointment(models.Model):
 
     patient_full_name = models.CharField(max_length=255)
     patient_phone = models.CharField(max_length=255)
-    clinic = models.ForeignKey(Clinic, on_delete=models.CASCADE, related_name='appointments')
-    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='appointments')
-    service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, related_name='appointments')
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='appointments') 
 
     date = models.DateField(db_index=True)
     time_start = models.TimeField()
 
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     number_coupon = models.CharField(max_length=20, blank=True, null=True)
-    comment = models.TextField(blank=True, null=True)
-
-    created_by = models.CharField(
-        max_length=50,
-        choices=[
-            ('patient', 'Пациент'),
-            ('clinic', 'Клиника'),
-            ('admin', 'Администратор'),
-        ]
-    )
-
-    source = models.CharField(max_length=50, blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -51,9 +37,8 @@ class Appointment(models.Model):
             models.Index(fields=['date']),
             models.Index(fields=['status']),
             models.Index(fields=['date', 'status']),
-            models.Index(fields=['clinic', 'date']),
             models.Index(fields=['doctor', 'date']), 
             models.Index(fields=['-created_at']), 
-            models.Index(fields=['clinic', 'status', 'date']), 
+            models.Index(fields=['status', 'date']), 
         ]
 

@@ -5,19 +5,14 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Загружаем переменные окружения из .env файла
 load_dotenv(BASE_DIR / '.env')
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
-TELEGRAM_ADMIN_CHAT_ID = os.getenv('TELEGRAM_ADMIN_CHAT_ID', '')
-
-DEBUG = os.getenv('DEBUG', 'True') == 'True'
+DEBUG = 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
 
-# База данных
-DATABASE_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.sqlite3')
 DATABASE_NAME = os.getenv('DB_NAME', 'db.sqlite3')
 DATABASE_USER = os.getenv('DB_USER', '')
 DATABASE_PASSWORD = os.getenv('DB_PASSWORD', '')
@@ -77,17 +72,16 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': DATABASE_ENGINE,
-        'NAME': BASE_DIR / DATABASE_NAME if DATABASE_ENGINE == 'django.db.backends.sqlite3' else DATABASE_NAME,
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': DATABASE_NAME,
         'USER': DATABASE_USER,
         'PASSWORD': DATABASE_PASSWORD,
         'HOST': DATABASE_HOST,
         'PORT': DATABASE_PORT,
         'CONN_MAX_AGE': 600, 
         'OPTIONS': {
-            # Для PostgreSQL
             'connect_timeout': 10,
-        } if DATABASE_ENGINE == 'django.db.backends.postgresql' else {},
+        }
     }
 }
 
@@ -108,24 +102,17 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Локализация уже определена выше из .env
 USE_I18N = True
 
 USE_TZ = True
 
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'users.User'
 
-TIME_ZONE = os.getenv('TIME_ZONE', 'UTC')
-LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', 'ru-RU')
+TIME_ZONE = 'Asia/Dushanbe'
+LANGUAGE_CODE = 'ru-RU'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -191,8 +178,8 @@ SIMPLE_JWT = {
     'AUTH_COOKIE_SAMESITE': os.getenv('AUTH_COOKIE_SAMESITE', DEFAULT_SAMESITE),
 }
 
-cors_origins = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173')
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',')]
+CORS_ORIGINGS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173')
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ORIGINGS.split(',')]
 
 CORS_ALLOW_CREDENTIALS = True  # Разрешить отправку cookies
 
@@ -241,132 +228,8 @@ if os.getenv('USE_REDIS', 'False') == 'True':
     SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
     SESSION_CACHE_ALIAS = 'default'
 
-# Celery
-CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/1'
-CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/2'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'Asia/Tashkent'
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
-# Отдельная очередь для бэкапа — не мешает основным задачам
-CELERY_TASK_ROUTES = {
-    'core.tasks.backup_database': {'queue': 'backup'},
-}
-
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-            'stream': sys.stdout,           
-        },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler', 
-            'filename': str(BASE_DIR / 'logs' / 'django.log'),
-            'maxBytes': 10 * 1024 * 1024,       # 10 МБ
-            'backupCount': 5,                   # 5 файлов по 10 МБ
-            'mode': 'a',
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
-        },
-        'frontend_file': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': str(BASE_DIR / 'logs' / 'react.log'),
-            'maxBytes': 10 * 1024 * 1024,       # 10 МБ
-            'backupCount': 5,                   # 5 файлов по 10 МБ
-            'mode': 'a',
-            'formatter': 'verbose',
-            'encoding': 'utf-8',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'core': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
-        'appointment': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
-        'users': {'handlers': ['console', 'file'], 'level': 'DEBUG', 'propagate': False},
-        'frontend': {'handlers': ['console', 'frontend_file'], 'level': 'DEBUG', 'propagate': False},
-    },
-}
-
 SENTRY_DSN = os.getenv('SENTRY_DSN', '')
 
-if SENTRY_DSN and not DEBUG:
-    import sentry_sdk
-    from sentry_sdk.integrations.django import DjangoIntegration
-    
-    sentry_sdk.init(
-        dsn=SENTRY_DSN,
-        integrations=[DjangoIntegration()],
-        traces_sample_rate=0.1,  # 10% транзакций для performance monitoring
-        send_default_pii=False,  # Не отправлять персональные данные
-        environment=os.getenv('ENVIRONMENT', 'production'),
-    )
-
-# Для production
-if not DEBUG:
-    # Минификация и сжатие
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
-
-    # Security
-    # SECURE_SSL_REDIRECT отключён: SSL терминируется на уровне nginx/proxy.
-    # Если в будущем появится HTTPS — включить обратно.
-    SECURE_SSL_REDIRECT = False
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
-    SECURE_HSTS_SECONDS = 0
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
-    SECURE_HSTS_PRELOAD = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_BROWSER_XSS_FILTER = True
-    X_FRAME_OPTIONS = 'DENY'
-
-# Django Debug Toolbar (только для разработки)
-if DEBUG:
-    INSTALLED_APPS += ['debug_toolbar']
-    MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
-    INTERNAL_IPS = ['127.0.0.1']
-
-
-# Логирование медленных запросов
-if DEBUG:
-    LOGGING['loggers']['django.db.backends'] = {
-        'handlers': ['console'],
-        'level': 'DEBUG',
-        'propagate': False,
-    }
-
-# Настройки для SpeechKit
 SPEECHKIT_API_KEY = os.getenv('SPEECHKIT_API_KEY', '')
 SPEECHKIT_API_KEY_V3 = os.getenv('SPEECHKIT_API_KEY_V3', '')
 SPEECHKIT_FOLDER_ID_V3 = os.getenv('SPEECHKIT_FOLDER_ID_V3', '')

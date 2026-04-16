@@ -1,11 +1,6 @@
-import os
-import logging
 import requests
 import base64
-import asyncio
-from datetime import datetime
 from django.conf import settings
-from django.http import FileResponse
 from rest_framework.response import Response
 from rest_framework import status
 from aiogram import Bot, Dispatcher, F
@@ -16,74 +11,6 @@ from aiogram.types import (
     InlineKeyboardButton,
 )
 from aiogram.filters import Command
-
-
-logger = logging.getLogger(__name__)
-
-def serve_pdf_file(
-        file_name: str, 
-        download_name: str | None = None, 
-        folder: str = 'documents', 
-        content_type: str = 'application/pdf'
-        ):
-    
-    file_path = os.path.join(settings.BASE_DIR, folder, file_name)
-    if not os.path.exists(file_path):
-        return Response(
-            {'error': 'Файл не найден'}, 
-            status=status.HTTP_404_NOT_FOUND
-            )
-
-    try:
-        file = open(file_path, 'rb')
-        response = FileResponse(file, content_type=content_type)
-        # RFC 5987 кодировка для корректной передачи не-ASCII имён файлов
-        from urllib.parse import quote
-        encoded_name = quote(download_name, safe='')
-        response['Content-Disposition'] = (
-            f"attachment; filename*=UTF-8''{encoded_name}"
-        )
-        logger.info(f"Файл {file_name} успешно загружен и отправлен клиенту")
-        return response
-    except Exception as e:
-        logger.exception("Ошибка при загрузке файла %s", file_name)
-        return Response(
-            {'error': f'Ошибка при загрузке файла: {str(e)}'}, 
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-
-def send_telegram_notification(full_name: str, email: str, message: str) -> bool:
-    """
-    Отправляет уведомление о новом сообщении с контактной формы в Telegram-чат администратора.
-    Токен и chat_id берутся из переменных окружения TELEGRAM_BOT_TOKEN и TELEGRAM_ADMIN_CHAT_ID.
-    """
-    bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
-    chat_id = getattr(settings, 'TELEGRAM_ADMIN_CHAT_ID', None)
-
-    if not bot_token or not chat_id:
-        logger.warning("TELEGRAM_BOT_TOKEN или TELEGRAM_ADMIN_CHAT_ID не настроены — уведомление не отправлено")
-        return False
-
-    text = (
-        "📩 <b>Новое сообщение с сайта</b>\n\n"
-        f"👤 <b>ФИО:</b> {full_name}\n"
-        f"📧 <b>Email:</b> {email}\n\n"
-        f"💬 <b>Сообщение:</b>\n{message}"
-    )
-
-    try:
-        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-        response = requests.post(
-            url,
-            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
-            timeout=10,
-        )
-        response.raise_for_status()
-        logger.info("Telegram-уведомление отправлено для %s", email)
-        return True
-    except Exception as exc:
-        logger.error("Ошибка отправки Telegram-уведомления: %s", exc)
-        return False
 
 
 def user_verification(user, role_user, text_error):
@@ -105,10 +32,8 @@ def patient_call_synthesis_in_memory(patient_name, number_coupon, cabinet_number
         folder_id = getattr(settings, 'SPEECHKIT_FOLDER_ID_V3')
 
         if not api_key:
-            logger.warning("SPEECHKIT_API_KEY_V3 не настроен в settings")
             return None
         if not folder_id:
-            logger.warning("SPEECHKIT_FOLDER_ID_V3 не настроен в settings")
             return None
         
         headers = {
@@ -137,8 +62,6 @@ def patient_call_synthesis_in_memory(patient_name, number_coupon, cabinet_number
             ]
         }
 
-        logger.info(f"[SPEECH] Синтез речи в памяти: {text}")
-
         response = requests.post(
             settings.SPEECHKIT_URL_V3,
             headers=headers,
@@ -162,28 +85,15 @@ def patient_call_synthesis_in_memory(patient_name, number_coupon, cabinet_number
                 except Exception:
                     continue
             if not audio_chunks:
-                logger.error("[ERROR] Не удалось извлечь аудио-чанки из ответа SpeechKit")
                 return None
             combined = b''.join(audio_chunks)
             audio_base64 = base64.b64encode(combined).decode('utf-8')
-            logger.info(f"[OK] Аудио синтезировано для {patient_name} (размер: {len(combined)} байт)")
             return audio_base64
-        else:
-            error_msg = f"Ошибка синтеза речи: {response.status_code}"
-            logger.error(f"[ERROR] {error_msg} - {response.text}")
-            
-            if response.status_code == 401:
-                logger.error("[ERROR] Проверьте SPEECHKIT_API_KEY и права доступа в Yandex Cloud")
-            
-            return None
     except requests.exceptions.Timeout:
-        logger.error("[ERROR] Таймаут при обращении к SpeechKit API")
         return None
     except requests.exceptions.RequestException as e:
-        logger.error(f"[ERROR] Сетевая ошибка при синтезе речи: {str(e)}")
         return None
     except Exception as e:
-        logger.exception(f"[ERROR] Исключение при синтезе речи для {patient_name}: {str(e)}")
         return None
 
 
@@ -203,7 +113,6 @@ async def run_bot_async():
 
     bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None)
     if not bot_token:
-        logger.warning("TELEGRAM_BOT_TOKEN не настроен — Telegram не будут работать")
         return None
 
     bot = Bot(token=bot_token)
@@ -389,6 +298,5 @@ async def run_bot_async():
 
     # --------------- start polling ---------------
 
-    logger.info("Telegram-бот запускается (polling)...")
     await dp.start_polling(bot, handle_signals=True)
 
