@@ -10,14 +10,8 @@ load_dotenv(BASE_DIR / '.env')
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
-DEBUG = 'True'
+DEBUG = True
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost').split(',')
-
-DATABASE_NAME = os.getenv('DB_NAME', 'db.sqlite3')
-DATABASE_USER = os.getenv('DB_USER', '')
-DATABASE_PASSWORD = os.getenv('DB_PASSWORD', '')
-DATABASE_HOST = os.getenv('DB_HOST', 'localhost')
-DATABASE_PORT = os.getenv('DB_PORT', '5432')
 
 
 INSTALLED_APPS = [
@@ -27,14 +21,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'corsheaders',
-    'django_celery_beat',
-    'core',
-    'users',
-    'appointment',
+
+    'core', 'users', 'appointment',
 ]
 
 MIDDLEWARE = [
@@ -46,7 +38,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'core.middleware.RequestLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -68,22 +59,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
-
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': DATABASE_NAME,
-        'USER': DATABASE_USER,
-        'PASSWORD': DATABASE_PASSWORD,
-        'HOST': DATABASE_HOST,
-        'PORT': DATABASE_PORT,
-        'CONN_MAX_AGE': 600, 
-        'OPTIONS': {
-            'connect_timeout': 10,
-        }
-    }
-}
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -116,12 +91,11 @@ LANGUAGE_CODE = 'ru-RU'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'users.authenticate.CustomAuthentication',  # Используем кастомную аутентификацию
+        'users.authenticate.CustomAuthentication', 
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'core.pagination.StandardResultsSetPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -133,16 +107,16 @@ REST_FRAMEWORK = {
     ],
 }
 
-ACCESS_TOKEN_LIFETIME_MINUTES = int(os.getenv('ACCESS_TOKEN_LIFETIME_MINUTES', '5'))  # Уменьшаем до 5 минут
-REFRESH_TOKEN_LIFETIME_DAYS = int(os.getenv('REFRESH_TOKEN_LIFETIME_DAYS', '1'))  # 1 день для refresh
-DEFAULT_SECURE_COOKIE = False  # Включить, когда будет HTTPS
+ACCESS_TOKEN_LIFETIME_MINUTES = int(os.getenv('ACCESS_TOKEN_LIFETIME_MINUTES', '5')) 
+REFRESH_TOKEN_LIFETIME_DAYS = int(os.getenv('REFRESH_TOKEN_LIFETIME_DAYS', '1')) 
+DEFAULT_SECURE_COOKIE = False
 DEFAULT_SAMESITE = 'Lax'
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=ACCESS_TOKEN_LIFETIME_MINUTES),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=REFRESH_TOKEN_LIFETIME_DAYS),
-    'ROTATE_REFRESH_TOKENS': True,  # Создавать новый refresh token при обновлении
-    'BLACKLIST_AFTER_ROTATION': True,  # Инвалидировать старый refresh token
+    'ROTATE_REFRESH_TOKENS': True, 
+    'BLACKLIST_AFTER_ROTATION': True,  
     'UPDATE_LAST_LOGIN': True,
     
     'ALGORITHM': 'HS256',
@@ -161,27 +135,19 @@ SIMPLE_JWT = {
     
     'JTI_CLAIM': 'jti',
     
-    # ========== HTTP-ONLY COOKIE SETTINGS ==========
-    # Имя cookie для access token
     'AUTH_COOKIE': 'access',
-    # Имя cookie для refresh token
     'AUTH_COOKIE_REFRESH': 'refresh',
-    # Домен для cookie (None = текущий домен)
     'AUTH_COOKIE_DOMAIN': None,
-    # HTTPS only
     'AUTH_COOKIE_SECURE': os.getenv('AUTH_COOKIE_SECURE', str(DEFAULT_SECURE_COOKIE)).lower() == 'true',
-    # HTTP-only флаг - JavaScript не может получить доступ к cookie
     'AUTH_COOKIE_HTTP_ONLY': True,
-    # Путь cookie
     'AUTH_COOKIE_PATH': '/',
-    # SameSite защита от CSRF
     'AUTH_COOKIE_SAMESITE': os.getenv('AUTH_COOKIE_SAMESITE', DEFAULT_SAMESITE),
 }
 
 CORS_ORIGINGS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:5173')
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ORIGINGS.split(',')]
 
-CORS_ALLOW_CREDENTIALS = True  # Разрешить отправку cookies
+CORS_ALLOW_CREDENTIALS = True 
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -200,11 +166,10 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = os.getenv('SESSION_COOKIE_SAMESITE', DEFAULT_SAMESITE)
 
 CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', str(DEFAULT_SECURE_COOKIE)).lower() == 'true'
-CSRF_COOKIE_HTTPONLY = False  # False чтобы JS мог читать для CSRF токена
+CSRF_COOKIE_HTTPONLY = False  
 CSRF_COOKIE_SAMESITE = os.getenv('CSRF_COOKIE_SAMESITE', DEFAULT_SAMESITE)
-CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS  # Доверяем тем же origin что и для CORS
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS  
 
-# Expose CSRF token в headers для фронтенда
 CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
@@ -219,11 +184,10 @@ CACHES = {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         } if os.getenv('USE_REDIS', 'False') == 'True' else {},
         'KEY_PREFIX': 'medbooker',
-        'TIMEOUT': 300,  # 5 минут по умолчанию
+        'TIMEOUT': 300, 
     }
 }
 
-# Session в Redis для production
 if os.getenv('USE_REDIS', 'False') == 'True':
     SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
     SESSION_CACHE_ALIAS = 'default'

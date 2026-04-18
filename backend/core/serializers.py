@@ -57,7 +57,7 @@ class ClinicUpdateSerializer(serializers.ModelSerializer):
             'name', 'city', 'address', 
             'working_hours', 'working_days', 
             'phone_number', 'email', 
-            'description', 'website', 'rating'
+            'description', 'website'
         ]
     
     def validate(self, data):
@@ -87,13 +87,7 @@ class ClinicUpdateSerializer(serializers.ModelSerializer):
             if Clinic.objects.filter(phone_number=value).exists():
                 raise serializers.ValidationError('Клиника с таким телефоном уже существует')
         return value
-        
-    def validate_rating(self, value):
-        """Проверка рейтинга"""
-        if value < 0 or value > 5:
-            raise serializers.ValidationError('Рейтинг должен быть от 0 до 5')
-        return value
-    
+
     def validate_working_hours(self, value):
         """Проверка формата рабочих часов"""
         if not isinstance(value, dict):
@@ -118,10 +112,10 @@ class DoctorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Doctor
         fields = [
-            'id', 'photo', 'full_name', 'specialty', 'phone_number',
+            'id', 'photo', 'full_name', 'phone_number',
             'clinic', 'clinic_name',
             'working_days', 'working_hours', 'lunch_time',
-            'work_experience', 'price', 'rating',
+            'work_experience', 'price',
             'available_for_booking', 'default_duration',
             'services', 'appointments_count'
         ]
@@ -140,20 +134,3 @@ class DoctorSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'appointments_count'):
             return obj.appointments_count
         return obj.appointments.count()
-
-
-class ReceivedMessageSerializer(serializers.ModelSerializer):
-    """Сериализатор для полученного сообщения от пользователя"""
-    
-    class Meta:
-        model = ReceivedMessage
-        fields = '__all__'
-        read_only_fields = ['id', 'received_at']
-
-class FAQEntrySerializer(serializers.ModelSerializer):
-    """Сериализатор для Часто задаваемых вопросов (FAQ)"""
-    
-    class Meta:
-        model = FAQEntry
-        fields = '__all__'
-        read_only_fields = ['id', 'created_at', 'updated_at']

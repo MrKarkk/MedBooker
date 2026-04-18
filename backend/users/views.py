@@ -44,14 +44,12 @@ class CookieTokenRefreshSerializer(jwt_serializers.TokenRefreshSerializer):
 
 REMEMBER_ME_REFRESH_LIFETIME = timedelta(days=30)
 
-
 def get_tokens_for_user(user, refresh_lifetime=None):
     """Генерация Access и Refresh токенов для пользователя"""
-    RefreshToken.objects.filter(user=user).delete()  # Удаляем старые токены
+    RefreshToken.objects.filter(user=user).delete()
     refresh = JWTRefreshToken.for_user(user)
     access = refresh.access_token
     
-    # Сохраняем refresh token в БД
     if refresh_lifetime is None:
         refresh_lifetime = settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', timedelta(days=1))
     expires_at = timezone.now() + refresh_lifetime
@@ -86,7 +84,6 @@ def register_view(request):
         
         res = Response(response_data, status=status.HTTP_201_CREATED)
         
-        # Устанавливаем access token в http-only cookie
         res.set_cookie(
             key=settings.SIMPLE_JWT['AUTH_COOKIE'],
             value=tokens['access'],
@@ -97,7 +94,6 @@ def register_view(request):
             path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH']
         )
         
-        # Устанавливаем refresh token в http-only cookie
         res.set_cookie(
             key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'],
             value=tokens['refresh'],
@@ -108,7 +104,6 @@ def register_view(request):
             path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH']
         )
         
-        # Добавляем CSRF токен в header
         res['X-CSRFToken'] = csrf.get_token(request)
         
         return res
@@ -130,7 +125,6 @@ def login_view(request):
     password = serializer.validated_data['password']
     remember_me = bool(request.data.get('remember_me', False))
     
-    # Аутентифицируем пользователя
     user = authenticate(request, username=email, password=password)
     
     if user is None:
@@ -143,11 +137,9 @@ def login_view(request):
             'error': 'Аккаунт деактивирован'
         }, status=status.HTTP_403_FORBIDDEN)
     
-    # Генерируем токены с учётом флага «Запомнить меня»
     refresh_lifetime = REMEMBER_ME_REFRESH_LIFETIME if remember_me else settings.SIMPLE_JWT.get('REFRESH_TOKEN_LIFETIME', timedelta(days=1))
     tokens = get_tokens_for_user(user, refresh_lifetime=refresh_lifetime)
     
-    # Создаем response
     response_data = {
         'user': UserSerializer(user).data,
         'message': 'Авторизация успешна'
@@ -155,7 +147,6 @@ def login_view(request):
     
     res = Response(response_data, status=status.HTTP_200_OK)
     
-    # Устанавливаем access token в http-only cookie (всегда с фиксированным временем жизни)
     res.set_cookie(
         key=settings.SIMPLE_JWT['AUTH_COOKIE'],
         value=tokens['access'],
@@ -166,9 +157,6 @@ def login_view(request):
         path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH']
     )
     
-    # Устанавливаем refresh token в http-only cookie
-    # remember_me=True  → persistent cookie на 30 дней
-    # remember_me=False → session cookie (исчезает при закрытии браузера)
     refresh_cookie_kwargs = dict(
         key=settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'],
         value=tokens['refresh'],
@@ -181,7 +169,6 @@ def login_view(request):
         refresh_cookie_kwargs['max_age'] = int(refresh_lifetime.total_seconds())
     res.set_cookie(**refresh_cookie_kwargs)
     
-    # Добавляем CSRF токен в header
     res['X-CSRFToken'] = csrf.get_token(request)
     
     return res
@@ -195,24 +182,20 @@ def logout_view(request):
     """
     enforce_csrf(request)
 
-    # Получаем refresh token из cookie
     refresh_token = request.COOKIES.get(settings.SIMPLE_JWT['AUTH_COOKIE_REFRESH'])
     refresh_token_hash = hash_token(refresh_token) if refresh_token else None
 
     if refresh_token:
         try:
-            # Добавляем в blacklist
             token = JWTRefreshToken(refresh_token)
             token.blacklist()
         except Exception:
-            pass  # Игнорируем ошибки, если токен уже недействителен
+            pass
 
-        # Инвалидируем токен в БД
         RefreshToken.objects.filter(token=refresh_token_hash).update(is_revoked=True)
 
     response = Response({'message': 'Выход выполнен успешно'}, status=status.HTTP_200_OK)
     
-    # Удаляем все auth cookies
     response.delete_cookie(
         key=settings.SIMPLE_JWT['AUTH_COOKIE'],
         path=settings.SIMPLE_JWT['AUTH_COOKIE_PATH'],
@@ -304,7 +287,6 @@ def refresh_view(request):
             stored_refresh.is_revoked = True
             stored_refresh.save(update_fields=['is_revoked'])
 
-        # Добавляем CSRF токен
         response['X-CSRFToken'] = request.COOKIES.get('csrftoken')
 
         return response
@@ -364,13 +346,11 @@ def change_password_view(request):
     if serializer.is_valid():
         user = request.user
         
-        # Проверка старого пароля
         if not user.check_password(serializer.validated_data['old_password']):
             return Response({
                 'error': 'Неверный старый пароль'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Установка нового пароля
         user.set_password(serializer.validated_data['new_password'])
         user.save()
         

@@ -32,7 +32,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         DOCTOR = 'doctor', 'Врач'
         CLINIC_ADMIN = 'clinic_admin', 'Администратор клиники'
         SUPER_ADMIN = 'super_admin', 'Суперадминистратор'
-        ONLINE_QUEUE_ADMIN = 'clinic_queue_admin', 'Администратор онлайн-очереди клиники'
     
     email = models.EmailField(unique=True, verbose_name='Email')
     full_name = models.CharField(max_length=255, verbose_name='ФИО')

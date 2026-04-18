@@ -16,5 +16,4 @@ urlpatterns = [
     path('clinic/queue/sse/', queue_appointments_sse, name='queue_appointments_sse_auto'),
 
     path('<int:appointment_id>/update/', update_appointment, name='update_appointment'),
-    path('user-appointments/', get_user_appointments, name='user_appointments'),
 ]

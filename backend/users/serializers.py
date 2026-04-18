@@ -14,7 +14,6 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'date_joined')
     
     def get_clinics(self, obj):
-        # Если пользователь — администратор клиники, возвращаем только верифицированные клиники
         if obj.role == User.Role.CLINIC_ADMIN:
             return [
                 {
@@ -24,7 +23,6 @@ class UserSerializer(serializers.ModelSerializer):
                     'phone_number': clinic.phone_number, 
                     'address': clinic.address, 
                     'working_hours': clinic.working_hours,
-                    'rating': clinic.rating
                     } 
                     for clinic in obj.clinics.filter(is_verified=True)
                 ]
@@ -37,7 +35,6 @@ class UserSerializer(serializers.ModelSerializer):
                     'phone_number': clinic.phone_number, 
                     'address': clinic.address, 
                     'working_hours': clinic.working_hours,
-                    'rating': clinic.rating
                     } 
                     for clinic in obj.clinics.filter(online_queue_only=True, is_verified=False)
                 ]
@@ -124,7 +121,6 @@ class ChangePasswordSerializer(serializers.Serializer):
         if attrs['new_password'] != attrs['new_password_confirm']:
             raise serializers.ValidationError({'new_password': 'Новые пароли не совпадают'})
         
-        # Валидация нового пароля
         try:
             validate_password(attrs['new_password'])
         except exceptions.ValidationError as e:

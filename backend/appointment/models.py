@@ -5,13 +5,11 @@ from core.models import Doctor
 class Appointment(models.Model):
     class Status(models.TextChoices):
         PENDING = 'pending', 'Ожидает подтверждения'
-        CONFIRMED = 'confirmed', 'Подтверждено'
-        CANCELED = 'canceled', 'Отменено пациентом'
-        REJECTED = 'rejected', 'Отменено клиникой'
-        FINISHED = 'finished', 'Прием завершен'
-        INVITED = 'invited', 'Приглашен'
-        NO_SHOW = 'no_show', 'Пациент не пришел'
         URGENT = 'urgent', 'Срочный'
+        CONFIRMED = 'confirmed', 'Подтверждено'
+        INVITED = 'invited', 'Приглашен'
+        CANCELED = 'canceled', 'Отменено'
+        FINISHED = 'finished', 'Прием завершен'
 
     patient_full_name = models.CharField(max_length=255)
     patient_phone = models.CharField(max_length=255)

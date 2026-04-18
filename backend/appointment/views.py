@@ -1,6 +1,5 @@
 import json
 import time
-import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
@@ -31,7 +30,6 @@ from core.models import Service
 
 
 sse_clients = {}
-# Глобальный словарь для отслеживания статусов записей (чтобы не синтезировать повторно)
 appointment_statuses = {}
 
 # Кэш результатов запроса очереди: clinic_key -> (list[Appointment], timestamp)
@@ -39,8 +37,6 @@ appointment_statuses = {}
 _queue_cache: dict = {}
 _queue_cache_lock = threading.Lock()
 _QUEUE_CACHE_TTL = 0.8  # секунды
-
-# Пул потоков для неблокирующего синтеза речи (SpeechKit API)
 _synth_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix='speech_synth')
 
 
@@ -52,7 +48,6 @@ def _get_queue_appointments(clinic_id, today):
         entry = _queue_cache.get(cache_key)
         if entry and (now - entry[1]) < _QUEUE_CACHE_TTL:
             return entry[0]
-    # Запрос вне блокировки, чтобы не держать lock во время IO
     fresh_data = list(
         Appointment.objects.filter(clinic_id=clinic_id, date=today)
         .select_related('doctor', 'clinic', 'service')
@@ -92,12 +87,11 @@ def search_available_doctors(request):
     Возвращает врачей со свободными слотами на 7 дней вперед.
     """
     service_id = request.data.get('service')
-    city = request.data.get('city')
     search_date_str = request.data.get('date')
     
-    if not all([service_id, city, search_date_str]):
+    if not all([service_id, search_date_str]):
         return Response(
-            {'error': 'Необходимо указать услугу, город и дату'},
+            {'error': 'Необходимо указать услугу и дату'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -117,10 +111,9 @@ def search_available_doctors(request):
             status=status.HTTP_404_NOT_FOUND
         )
     
-    # TODO изменить способ находить врача по услугу, городу и статусу клиники, чтобы не делать лишних запросов к БД в цикле (для каждого врача)
+    # TODO изменить способ находить врача по услугу, городу и статусу клиники, чтобы не делать лишних запросов к БД в цикле (для каждого врача).
     doctors = Doctor.objects.filter(
         services__id=service_id,
-        clinic__city=city,
         clinic__is_verified=True,
         clinic__is_active=True,
         clinic__is_online_booking=True,
@@ -129,16 +122,13 @@ def search_available_doctors(request):
     ).select_related('clinic').prefetch_related('services').distinct()
     
     if not doctors.exists():
-        logger.debug(f"Врачи для услуги {service.name} в городе {city} не найдены")
         return Response(
             {'message': 'Врачи не найдены', 'doctors': []},
             status=status.HTTP_200_OK
         )
     
-    # Используем сервис availability для получения слотов    
     results = []
     for doctor in doctors:
-        # Получаем свободные слоты на 7 дней
         slots = get_available_slots(
             doctor=doctor,
             start_date=search_date,
@@ -146,18 +136,14 @@ def search_available_doctors(request):
             days_ahead=3
         )
         
-        # Проверяем, есть ли хотя бы один свободный слот
         has_slots = any(day_slots for day_slots in slots.values())
         
         if has_slots:
-            # Формируем данные врача
             doctor_data = {
                 'id': doctor.id,
                 'full_name': doctor.full_name,
-                'specialty': doctor.specialty,
                 'work_experience': doctor.work_experience,
                 'price': float(doctor.price),
-                'rating': doctor.rating,
                 'clinic': {
                     'id': doctor.clinic.id,
                     'name': doctor.clinic.name,
@@ -168,18 +154,15 @@ def search_available_doctors(request):
             }
             results.append(doctor_data)
     
-    # Сортировка: врачи с большим количеством слотов в начале списка
     results.sort(
         key=lambda x: sum(len(day_slots) for day_slots in x['slots'].values()),
         reverse=True
     )
     
-    logger.debug(f"Найдено {len(results)} врачей с доступными слотами для услуги {service.name} в городе {city}")
     return Response({
         'doctors': results,
         'search_params': {
             'service': service_id,
-            'city': city,
             'date': search_date.isoformat()
         }
     }, status=status.HTTP_200_OK)
@@ -192,18 +175,14 @@ def create_appointment(request):
     serializer = AppointmentCreateSerializer(data=request.data)
     
     if serializer.is_valid():
-        # Используем атомарную транзакцию для защиты от race condition
         with transaction.atomic():
-            # Получаем данные из валидированного serializer
             doctor = serializer.validated_data['doctor']
             appointment_date = serializer.validated_data['date']
             time_start = serializer.validated_data['time_start']
             service = serializer.validated_data.get('service')
             
-            # Определяем длительность приёма
             duration_minutes = service.duration if service and hasattr(service, 'duration') else doctor.default_duration
             
-            # Проверяем доступность слота перед созданием
             is_available, error_message = is_slot_available(
                 doctor=doctor,
                 appointment_date=appointment_date,
@@ -212,7 +191,6 @@ def create_appointment(request):
             )
             
             if not is_available:
-                logger.debug(f"Попытка забронировать занятый слот: Врач {doctor.full_name}, Дата {appointment_date}, Время {time_start}")
                 return Response(
                     {'error': error_message or 'Выбранный временной слот недоступен'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -220,52 +198,15 @@ def create_appointment(request):
             
             appointment = serializer.save(created_by='patient', status='pending')
 
-        # Возвращаем полные данные с названиями
         full_serializer = AppointmentSerializer(appointment)
-        logger.debug(f"Возвращаем {full_serializer} полные данные с названиями")
         return Response(full_serializer.data, status=status.HTTP_201_CREATED)
     
-    logger.debug(f"Ошибка при создании записи {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_user_appointments(request):
-    """Получение записей текущего пользователя"""
-    user = request.user
-    
-    if user.role == 'doctor':
-        # Находим врача по tg_id или phone_number для надёжной связи (не по имени)
-        doctor = Doctor.objects.filter(
-            Q(tg_id=user.tg_id, tg_id__isnull=False) |
-            Q(phone_number=user.phone_number)
-        ).first()
-
-        if not doctor:
-            return Response(
-                {'error': 'Профиль врача не найден. Обратитесь к администратору.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        appointments = Appointment.objects.filter(
-            doctor=doctor
-        ).select_related('doctor', 'clinic', 'service').order_by('-date', '-time_start')
-
-        serializer = AppointmentSerializer(appointments, many=True)
-        logger.debug(f"Успешная отправка записей врача: {user}")
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    else:
-        logger.debug(f"Пользователь {user} пытается просмотреть записи, но не является врачом")
-        return Response(
-            {'error': 'Только врачи могут просматривать свои записи'},
-            status=status.HTTP_403_FORBIDDEN
-        )
-    
-
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def get_clinic_appointments(request, clinic_id):
+def get_clinic_appointments(request):
     """Получение всех записей клиники за последние 7 дней (для администраторов клиники и очереди)"""
     user = request.user
 
@@ -274,6 +215,9 @@ def get_clinic_appointments(request, clinic_id):
             {'error': 'У вас нет прав для просмотра записей'},
             status=status.HTTP_403_FORBIDDEN
         )
+    
+    # TODO Должны нвйти id клиники в которой пользователь является админом.
+    clinic_id = user.clinics.filter(id=clinic_id).values_list('id', flat=True).first()
 
     # Проверка, что клиника принадлежит пользователю
     if not user.clinics.filter(id=clinic_id).exists():
@@ -302,26 +246,21 @@ def update_appointment(request, appointment_id):
     """Обновление записи (только для администратора клиники)"""
     user = request.user
     
-    # Проверка роли и прав
     if user.role == 'clinic_admin':
-        # Админ клиники может менять любые записи своей клиники
         try:
             appointment = Appointment.objects.select_related('clinic').get(id=appointment_id)
         except Appointment.DoesNotExist:
-            logger.debug(f"Запись {appointment_id} не найдена")
             return Response(
                 {'error': 'Запись не найдена'},
                 status=status.HTTP_404_NOT_FOUND
             )
         if not user.clinics.filter(id=appointment.clinic_id).exists():
-            logger.debug(f"Пользователь {user} пытается просмотреть все записи, но не является админом")
             return Response(
                 {'error': 'У вас нет доступа к этой записи'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        allowed_fields = None  # Админ может менять любые поля
+        allowed_fields = None
     elif user.role == 'doctor':
-        # Врач может менять только свои записи — ищем привязанного врача по tg_id/phone
         doctor = Doctor.objects.filter(
             Q(tg_id=user.tg_id, tg_id__isnull=False) |
             Q(phone_number=user.phone_number)
@@ -334,20 +273,17 @@ def update_appointment(request, appointment_id):
         try:
             appointment = Appointment.objects.get(id=appointment_id, doctor=doctor)
         except Appointment.DoesNotExist:
-            logger.debug(f"Запись {appointment_id} не найдена или врач не имеет доступа")
             return Response(
                 {'error': 'Запись не найдена или у вас нет доступа'},
                 status=status.HTTP_404_NOT_FOUND
             )
-        allowed_fields = ['status', 'comment']  # Врач может менять только статус и комментарий
+        allowed_fields = ['status']
     else:
-        logger.debug(f"Пользователь {user} пытается изменить запись {appointment_id}, но не имеет прав")
         return Response(
             {'error': 'У вас нет прав для изменения записей'},
             status=status.HTTP_403_FORBIDDEN
         )
 
-    # Оставляем только разрешённые поля для врача
     data = request.data
     if allowed_fields is not None:
         data = {field: value for field, value in request.data.items() if field in allowed_fields}
@@ -356,9 +292,7 @@ def update_appointment(request, appointment_id):
     if serializer.is_valid():
         serializer.save()
         full_serializer = AppointmentSerializer(appointment)
-        logger.debug(f"Успешно обновлена запись: {full_serializer.data}")
         return Response(full_serializer.data, status=status.HTTP_200_OK)
-    logger.debug(f"Ошибка при обновлении записи {serializer.errors}")
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -366,14 +300,12 @@ def update_appointment(request, appointment_id):
 @permission_classes([AllowAny])
 def get_services_and_cities(request):
     """Получение списка всех доступных услуг и городов"""
-    # Получение услуг
     services = Service.objects.filter(
         doctors__clinic__is_verified=True,
         doctors__clinic__is_active=True,
         doctors__clinic__is_online_booking=True,
     ).distinct().values('id', 'name').order_by('name')
     
-    # Получение городов
     cities = Clinic.objects.filter(
         is_active=True, 
         is_verified=True,
@@ -398,22 +330,16 @@ def get_clinic_queue_settings(request, clinic_id=None):
         required_roles=['clinic_admin', 'clinic_queue_admin'],
     )
     if error_response:
-        logger.warning("Пользователь %s не смог получить настройки очереди clinic_id=%s", user.id, clinic_id)
         return error_response
     
-    # Проверка, что клиника поддерживает электронную очередь
     if not clinic.is_electronic_queue:
-        logger.warning(f"Пользователь {user} пытается получить настройки очереди для клиники {clinic}, но электронная очередь не включена")
         return Response(
             {'error': 'Электронная очередь не включена для этой клиники'},
             status=status.HTTP_400_BAD_REQUEST
         )
-    else:
-        logger.debug(f"Пользователь {user} запрашивает настройки очереди для клиники {clinic}")
     
     today = datetime.now().date()
 
-    # Фильтруем врачей клиники, которые работают сегодня
     today_weekday = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][today.weekday()]
     doctors = Doctor.objects.filter(
         clinic=clinic,
@@ -453,7 +379,6 @@ def get_clinic_queue_settings(request, clinic_id=None):
         'urgent_count': status_counts['urgent'],
     }
     
-    logger.info(f"Пользователь {user} получил настройки очереди для клиники {clinic}: {response_data}")
     return Response(response_data, status=status.HTTP_200_OK)
 
 
@@ -463,9 +388,7 @@ def create_queue_appointment_by_admin(request, clinic_id=None):
     """Создание записи в электронную очередь админом клиники"""
     user = request.user
     
-    # Проверка прав - только clinic_admin может создавать записи
     if user.role != 'clinic_admin':
-        logger.warning(f"Пользователь {user} пытается создать запись в электронной очереди, но не имеет прав")
         return Response(
             {'error': 'Только администратор клиники может создавать записи'},
             status=status.HTTP_403_FORBIDDEN
@@ -477,31 +400,24 @@ def create_queue_appointment_by_admin(request, clinic_id=None):
         required_roles=['clinic_admin'],
     )
     if error_response:
-        logger.warning("Пользователь %s не смог создать запись в очереди clinic_id=%s", user.id, clinic_id)
         return error_response
     
-    # Проверка электронной очереди
     if not clinic.is_electronic_queue:
-        logger.warning(f"Пользователь {user} пытается создать запись в электронной очереди для клиники {clinic}, но электронная очередь не включена")
         return Response(
             {'error': 'У клиники нет доступа к электронной очереди'},
             status=status.HTTP_403_FORBIDDEN
         )
     
-    # Получаем данные
     service_id = request.data.get('service')
     doctor_id = request.data.get('doctor')
     patient_full_name = request.data.get('patient_full_name')
     patient_phone = request.data.get('patient_phone')
     is_urgent = request.data.get('is_urgent', False)
     
-    # Определяем врача
     doctor = None
     service = None
     
     if clinic.is_booking_for_doctors and doctor_id:
-        logger.info(f"Клиника {clinic} поддерживает запись по врачам. Ищем врача с ID {doctor_id} для записи пациента {patient_full_name}")
-        # Бронирование по врачам
         try:
             doctor = Doctor.objects.get(id=doctor_id, clinic=clinic, is_active=True)
         except Doctor.DoesNotExist:
@@ -510,8 +426,6 @@ def create_queue_appointment_by_admin(request, clinic_id=None):
                 status=status.HTTP_404_NOT_FOUND
             )
     elif clinic.is_booking_for_services and service_id:
-        logger.info(f"Клиника {clinic} поддерживает запись по услугам. Ищем услугу с ID {service_id} для записи пациента {patient_full_name}")
-        # Бронирование по услугам
         try:
             service = Service.objects.get(id=service_id)
         except Service.DoesNotExist:
@@ -520,7 +434,6 @@ def create_queue_appointment_by_admin(request, clinic_id=None):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Выбираем врача с наименьшим количеством записей на сегодня
         today = datetime.now().date()
         
         doctor = Doctor.objects.filter(
@@ -543,17 +456,14 @@ def create_queue_appointment_by_admin(request, clinic_id=None):
                 status=status.HTTP_404_NOT_FOUND
             )
     else:
-        logger.warning(f"Пользователь {user} пытается создать запись в электронной очереди для клиники {clinic}, но не указал врача или услугу")
         return Response(
             {'error': 'Необходимо указать врача или услугу в зависимости от настроек клиники'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    # Текущая дата и время
     appointment_date = datetime.now().date()
     time_start = datetime.now().replace(second=0, microsecond=0).time()
     
-    # Генерация талона
     full_name = (doctor.full_name or '').strip()
     name_parts = full_name.split() if full_name else []
     
@@ -562,7 +472,6 @@ def create_queue_appointment_by_admin(request, clinic_id=None):
     else:
         initials = ""
     
-    # Подсчет существующих записей
     existing_count = Appointment.objects.filter(
         clinic=clinic,
         date=appointment_date,
@@ -572,15 +481,12 @@ def create_queue_appointment_by_admin(request, clinic_id=None):
     seq = existing_count + 1
     number_coupon = f"{initials}{seq:02d}"
     
-    # Определение статуса
-    # Проверяем есть ли записи со статусом invited или pending
     has_active_appointments = Appointment.objects.filter(
         doctor=doctor,
         date=appointment_date,
         status__in=['invited', 'pending', 'confirmed']
     ).exists()
     
-    # Проверяем время обеда
     weekday_map = {0: 'mon', 1: 'tue', 2: 'wed', 3: 'thu', 4: 'fri', 5: 'sat', 6: 'sun'}
     weekday = weekday_map[appointment_date.weekday()]
     lunch_time = doctor.lunch_time.get(weekday, [])
@@ -592,7 +498,6 @@ def create_queue_appointment_by_admin(request, clinic_id=None):
         lunch_end = dt.strptime(lunch_time[1], "%H:%M").time()
         is_lunch_time = lunch_start <= time_start < lunch_end
     
-    # Устанавливаем статус
     if is_urgent:
         appointment_status = 'urgent'
     elif not has_active_appointments and not is_lunch_time:
@@ -600,9 +505,6 @@ def create_queue_appointment_by_admin(request, clinic_id=None):
     else:
         appointment_status = 'confirmed'
 
-    logger.info(f"Пользователь {user} создал запись в электронной очереди для клиники {clinic}. Статус: {appointment_status}, Врач: {doctor.full_name}, Пациент: {patient_full_name}, Талон: {number_coupon}")
-    
-    # Создаем запись
     with transaction.atomic():
         appointment = Appointment.objects.create(
             doctor=doctor,
@@ -631,7 +533,6 @@ def queue_appointments_sse(request, clinic_id=None):
     token = request.COOKIES.get(auth_cookie_name)
     
     if not token:
-        logger.warning("SSE: запрос без токена")
         return JsonResponse({'error': 'Токен не предоставлен'}, status=401)
     
     # Проверяем токен и получаем пользователя
@@ -640,12 +541,10 @@ def queue_appointments_sse(request, clinic_id=None):
         user_id = access_token['user_id']
         user = User.objects.get(id=user_id)
     except Exception as e:
-        logger.warning(f"SSE: недействительный токен — {e}")
         return JsonResponse({'error': 'Недействительный токен'}, status=401)
 
     # Проверка прав доступа - админы клиники и админы очереди
     if user.role not in ['clinic_admin', 'clinic_queue_admin']:
-        logger.warning(f"SSE: пользователь {user} не имеет прав для просмотра очереди")
         return JsonResponse({'error': 'У вас нет прав для просмотра записей'}, status=403)
 
     clinic, error_response = resolve_admin_clinic(
@@ -654,11 +553,9 @@ def queue_appointments_sse(request, clinic_id=None):
         required_roles=['clinic_admin', 'clinic_queue_admin'],
     )
     if error_response:
-        logger.warning("SSE: пользователь %s не получил доступ к clinic_id=%s", user.id, clinic_id)
         return JsonResponse(error_response.data, status=error_response.status_code)
 
     clinic_id = clinic.id
-    logger.info(f"SSE: пользователь {user} подключается к очереди клиники {clinic} (ID: {clinic_id})")
 
     def event_stream():
         """Генератор событий SSE"""
@@ -720,19 +617,8 @@ def queue_appointments_sse(request, clinic_id=None):
                                     'patient_name': synth_info['patient_name'],
                                     'cabinet_number': synth_info['cabinet_number'],
                                 })
-                                logger.info(
-                                    f"[CALL] Синтезировано аудио для пациента: {synth_info['patient_name']}, "
-                                    f"талон: {synth_info['coupon'] or 'без талона'}, "
-                                    f"размер base64: {len(audio_base64)} символов, "
-                                    f"время синтеза: {synth_elapsed:.3f}с"
-                                )
-                            else:
-                                logger.warning(
-                                    f"[CALL] Не удалось синтезировать аудио для {synth_info['patient_name']}, "
-                                    f"время ожидания синтеза: {synth_elapsed:.3f}с"
-                                )
                         except Exception as exc:
-                            logger.error(f"[CALL] Ошибка синтеза для appointment {apt_id}: {exc}")
+                            print(f"Ошибка синтеза речи для записи {apt_id}: {exc}")
                 for apt_id in completed_ids:
                     del pending_synth[apt_id]
 
@@ -741,17 +627,11 @@ def queue_appointments_sse(request, clinic_id=None):
                     current_status = apt.status
                     previous_status = appointment_statuses[clinic_key].get(apt.id)
                     
-                    # Логируем все изменения статусов
-                    if previous_status and current_status != previous_status:
-                        logger.info(f"[STATUS_CHANGE] Клиника {clinic_id}, ID:{apt.id}, {apt.patient_full_name}: {previous_status} -> {current_status}")
-                    
                     # Если статус изменился на "invited" - отправляем синтез в фоновый поток
                     if current_status == 'invited' and previous_status != 'invited':
                         if apt.id not in pending_synth:  # не отправлять повторно
                             coupon = apt.number_coupon or ''
                             cabinet_number = getattr(apt.doctor, 'cabinet_number', '') if apt.doctor else ''
-                            logger.info(f"[VOICE_TRIGGER] Запускаем синтез (async) для пациента: {apt.patient_full_name}, талон: {coupon or 'без талона'}")
-                            logger.debug(f"[VOICE_DEBUG] Параметры: patient={apt.patient_full_name}, coupon={coupon or 'нет'}, cabinet={cabinet_number or 'нет'}")
 
                             future = _synth_executor.submit(
                                 patient_call_synthesis_in_memory,
@@ -781,7 +661,6 @@ def queue_appointments_sse(request, clinic_id=None):
                 # Если есть голосовые объявления, добавляем их в ответ
                 if voice_announcements:
                     response_data['voice_announcements'] = voice_announcements
-                    logger.info(f"[SSE_SEND] Отправляем {len(voice_announcements)} голосовых объявлений клиенту {client_id}")
                 
                 yield f"data: {json.dumps(response_data)}\n\n"
 
@@ -809,5 +688,3 @@ def queue_appointments_sse(request, clinic_id=None):
     response['Cache-Control'] = 'no-cache'
     response['X-Accel-Buffering'] = 'no'
     return response
-
-

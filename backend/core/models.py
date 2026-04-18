@@ -46,7 +46,6 @@ class Clinic(models.Model):
         verbose_name_plural = "Клиники"
         indexes = [
             models.Index(fields=['city']),
-            models.Index(fields=['rating']),
             models.Index(fields=['is_active']),
             models.Index(fields=['is_verified']),
             models.Index(fields=['is_online_booking']),
@@ -54,7 +53,6 @@ class Clinic(models.Model):
             models.Index(fields=['is_notification_telegram']),
             models.Index(fields=['online_queue_only']),
             models.Index(fields=['is_active', 'is_verified']), 
-            models.Index(fields=['-rating']), 
         ]
 
 class Doctor(models.Model):
@@ -74,7 +72,6 @@ class Doctor(models.Model):
 
     available_for_booking = models.BooleanField(default=True)
     default_duration = models.PositiveIntegerField(default=30)
-    rating = models.FloatField(default=0.0, db_index=True)
 
     is_active = models.BooleanField(default=True, db_index=True)
 
@@ -86,11 +83,8 @@ class Doctor(models.Model):
         verbose_name_plural = "Врачи"
         indexes = [
             models.Index(fields=['clinic', 'is_active']),
-            models.Index(fields=['rating']),
-            models.Index(fields=['-rating']),  
             models.Index(fields=['is_active']),
             models.Index(fields=['available_for_booking']),
-            models.Index(fields=['specialty']),
         ]
 
 class Service(models.Model):
